@@ -1,0 +1,6 @@
+.DS_Store
+Thumbs.db
+
+_build
+_temp
+node_dmoules

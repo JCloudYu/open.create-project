@@ -1,0 +1,15 @@
+{
+	"private": false,
+	"name": "create-elmjs-project",
+	"version": "1.0.0",
+	"main": "index.js",
+	"repository": "https://github.com/JCloudYu/open.create-elmjs-project.git",
+	"author": "JCloudYu",
+	"license": "MIT",
+	"dependencies": {
+		"@types/node": "^20.12.2",
+		"clipargs": "^3.0.0",
+		"copyfiles": "^2.4.1",
+		"zx": "^7.2.3"
+	}
+}

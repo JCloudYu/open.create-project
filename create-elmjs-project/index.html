@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+	<head>
+		<title>EXAMPLE</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<meta charset="UTF-8" />
+		<base href="./" />
+
+		<script src="./dayjs.min.js"></script>
+	</head>
+	<body>
+		<script id="app-bootstrap-code" defer>(()=>{
+			"use strict";
+			
+			const original_define = window.define;
+			const original_require = window.require;
+			const bootstrap_path = document.querySelector('#app-bootstrap-code').dataset.bootstrap;
+
+			script('./require.min.js')
+			.then(()=>script(bootstrap_path))
+			.then(()=>require(['boot']))
+			.then(()=>window.define = window.require = undefined);
+
+
+
+			async function script(path) {
+				return new Promise((res, rej)=>{
+					const script = document.createElement('script');
+					script.src = path;
+					script.type ="application/javascript";
+					script.onload = ()=>res();
+					script.onerror = (err)=>rej(err);
+					document.body.appendChild(script);
+				})
+			}
+		})();</script>
+	</body></html>

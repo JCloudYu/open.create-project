@@ -1,0 +1,13 @@
+{
+	"scripts": {
+		"build": "zx z_compile.mjs"
+	},
+	"license": "MIT",
+	"dependencies": {
+		"@types/node": "^20.12.2",
+		"clipargs": "^3.0.0",
+		"jsdom": "^23.0.1",
+		"sass": "^1.69.7",
+		"zx": "^7.2.3"
+	}
+}

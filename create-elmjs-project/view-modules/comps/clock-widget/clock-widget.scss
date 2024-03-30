@@ -1,0 +1,9 @@
+clock-widget {
+	display:flex; align-items:center; justify-content:center; column-gap:.5rem;
+	color:#FFF; font-size:10rem;
+
+	span.tick {
+		color:#000;
+		&.on { color:#FFF; }
+	}
+}
