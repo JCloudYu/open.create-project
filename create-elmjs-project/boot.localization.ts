@@ -25,5 +25,6 @@ export async function init() {
 		}
 	}
 	
-	$T.setLocale(locale, locale_map[locale]||locale_map[DEFAULT_LOCALE]);
+	const locale_trans = locale_map[locale];
+	$T.setLocale(locale_trans?locale:DEFAULT_LOCALE, locale_trans||locale_map[DEFAULT_LOCALE]);
 }
