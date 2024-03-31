@@ -90,7 +90,7 @@ if ( !argv.compile ) {
 
 
 echo("Generating style...");
-fs.writeFileSync('./_temp/style.scss', css_files.map((f)=>`@use "${path.resolve(__dirname, f)}" as *;`).join("\n"), {flag:'w'});
+fs.writeFileSync('./_temp/style.scss', css_files.sort((a,b)=>a>b?1:(a<b?-1:0)).map((f)=>`@use "${path.resolve(__dirname, f)}" as *;`).join("\n"), {flag:'w'});
 exit_code = (await $`sass --no-source-map ./_temp/style.scss ./_build/style.css`).exitCode;
 if ( exit_code ) process.exit(exit_code);
 
