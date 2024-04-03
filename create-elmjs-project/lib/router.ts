@@ -58,32 +58,51 @@ export class Router {
 }
 
 
-let cached_data:Record<string, any> = {};
-export class Route {
-	static get permData():Record<string, any> {
-		return cached_data;
+class RouteCtrl extends EventTarget {
+	#cached_data:Record<string, any> = {};
+
+	get permData():Record<string, any> {
+		return this.#cached_data;
 	}
-	static set permData(data:Record<string, any>) {
-		cached_data = Object.assign({}, data);
+	set permData(data:Record<string, any>) {
+		this.#cached_data = Object.assign({}, data);
 	}
-	static push(url:string, state?:any):void {
+	get route() {
+		return {
+			path:window.location.pathname,
+			state:window.history.state||null
+		};
+	}
+
+	push(url:string, state?:any):void {
 		const parsed_url = new URL(`http://HOST${(url[0]==='/'?'':'/')}${url}`);
-		for(const key in cached_data) {
-			parsed_url.searchParams.set(key, `${cached_data[key]||''}`);
+		for(const key in this.#cached_data) {
+			parsed_url.searchParams.set(key, `${this.#cached_data[key]||''}`);
 		}
 		history.pushState(state, '', `${parsed_url.pathname}${parsed_url.search}${parsed_url.hash}`);
+		this.dispatchEvent(Object.assign(new Event('changed', {bubbles:false}), {op:'pushed'}));
 	}
-	static replace(url:string, state?:any):void {
+	replace(url:string, state?:any):void {
 		const parsed_url = new URL(`http://HOST${(url[0]==='/'?'':'/')}${url}`);
-		for(const key in cached_data) {
-			parsed_url.searchParams.set(key, `${cached_data[key]||''}`);
+		for(const key in this.#cached_data) {
+			parsed_url.searchParams.set(key, `${this.#cached_data[key]||''}`);
 		}
+
 		history.replaceState(state, '', `${parsed_url.pathname}${parsed_url.search}${parsed_url.hash}`);
+		this.dispatchEvent(Object.assign(new Event('changed', {bubbles:false}), {op:'replaced'}));
 	}
-	static pop(delta:number=1) {
+	pop(delta:number=1) {
 		history.go(-delta);
+		this.dispatchEvent(Object.assign(new Event('changed', {bubbles:false}), {op:'poped'}));
+	}
+
+	on<EventType extends Event = Event&{op:'pushed'|'poped'|'replaced', [key:string]:any}>(event:'changed', callback:{(e:EventType):void}):symbol;
+	on<EventType extends Event = Event>(event:string, callback:{(e:EventType):void}):symbol {
+		return super.on(event, callback);
 	}
 }
+
+export const Route = new RouteCtrl();
 
 
 // Test script

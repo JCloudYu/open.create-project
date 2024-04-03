@@ -1,24 +1,13 @@
-import {$EventBus, $Router} from "/runtime.js";
+import {$EventBus, $Route, $Router} from "/runtime.js";
 
 
 
 export async function init(viewport_selector:string|HTMLElement) {
-	const ori_push_state = window.history.pushState;
-	window.history.pushState = function(data:any, unused:string, url?:string|URL|null|undefined) {
-		ori_push_state.call(window.history, data, unused, url);
-		window.emit('pushstate', {state:data})
-	};
-	window.history.replaceState = function(data:any, unused:string, url?:string|URL|null|undefined) {
-		ori_push_state.call(window.history, data, unused, url);
-		window.emit('pushstate', {state:data})
-	};
-	window.on<PopStateEvent>('pushstate', (e)=>RouteChange(e.state));
-	window.on<PopStateEvent>('popstate', (e)=>RouteChange(e.state));
-
-
 	const view_container = typeof viewport_selector === "string" ? document.querySelector(viewport_selector)! : viewport_selector;
-	function RouteChange(state:any={}) {
-		const path = window.location.pathname;
+	$Route.on('changed', (e)=>{
+		const state = e.state||{};
+
+		const path = $Route.route.path;
 		const result = $Router.locate<{view:HTMLElement}>(path);
 		if ( !result ) {
 			throw new Error(`No valid handler for route: ${path}!`);
@@ -41,7 +30,7 @@ export async function init(viewport_selector:string|HTMLElement) {
 
 		view_container.append(dest);
 		dest.emit('state:show', {params:result.params, data:state}, false);
-	}
+	});
 
 
 
@@ -59,7 +48,7 @@ export async function init(viewport_selector:string|HTMLElement) {
 			const route_path = elm.getAttribute('elm-route');
 			if ( !route_path ) return;
 
-			setTimeout(()=>window.history.pushState({}, '', route_path));
+			setTimeout(()=>$Route.push(route_path, {}));
 			return;
 		}
 		
