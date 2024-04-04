@@ -14,10 +14,10 @@ import {$EventBus, $Route, $Router} from "/runtime.js";
 	const app_view = ElmJS.createElement(/*html*/`
 		<app-view>
 			<div elm-export="viewport" class="viewport">
-				<init-view elm-root></init-view>
+				<init-view class="assigned-init-class" elm-root></init-view>
 				<clock-view elm-root>
 					<div>
-						<clock-widget elm-export="clock"></clock-widget>
+						<clock-widget class="assigned-widget-class" elm-export="clock"></clock-widget>
 						<div class="message" elm-export="message"></div>
 					</div>
 				</clock-view>

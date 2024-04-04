@@ -81,14 +81,6 @@ for(const candidate of scripts) {
 
 
 
-
-if ( !argv.compile ) {
-	echo("Copy public resources...");
-	await $`cp -r ./static/* ./_build`;
-}
-
-
-
 echo("Generating style...");
 fs.writeFileSync('./_temp/style.scss', css_files.sort((a,b)=>a>b?1:(a<b?-1:0)).map((f)=>`@use "${path.resolve(__dirname, f)}" as *;`).join("\n"), {flag:'w'});
 exit_code = (await $`sass --no-source-map ./_temp/style.scss ./_build/style.css`).exitCode;
@@ -157,10 +149,39 @@ fs.writeFileSync('./_build/index.html', DOM.serialize());
 
 
 echo("Dumpping module view contents...");
+const verf = new JSDOM();
+const verf_body = verf.window.document.body;
 const view_ctnts = {};
+const errors = [];
 for(const key in module_view_map) {
-	view_ctnts[key] = fs.readFileSync(module_view_map[key].path).toString('utf8');
+	const view_path = module_view_map[key].path;
+	const view_content = verf_body.innerHTML = fs.readFileSync(view_path).toString('utf8');
+	if ( verf_body.children.length <= 0 ) {
+		echo(`No element found in ${view_path}... skipping`);
+		continue;
+	}
+
+	if ( verf_body.children.length > 1 ) {
+		errors.push(`Module view allows only one element same with the script name! (${view_path})`);
+		continue;
+	}
+	else {
+		const module_elm = verf_body.children[0];
+		if ( module_elm.tagName.toUpperCase() !== key ) {
+			errors.push(`Module view element tag-name doesn't matches the script tag name! (${view_path})`);
+			continue;
+		}
+	}
+
+	view_ctnts[key] = view_content;
 }
+
+if ( errors.length > 0 ) {
+	echo(`There're errors in module views...`);
+	echo(errors.map(i=>`    ${i}`).join("\n"));
+	process.exit(1);
+}
+
 
 const module_dep = [ "require", "exports", ...module_script_paths ];
 fs.appendFileSync(`./_build/${bootscript_path}`, `
@@ -173,3 +194,12 @@ define("boot.module-env", ${JSON.stringify(module_dep)}, function (require, expo
 
 echo("Cleanning up...");
 await $`rm -rf ./_temp`;
+
+
+
+
+
+if ( !argv.compile ) {
+	echo("Copy public resources...");
+	await $`cp -r ./static/* ./_build`;
+}

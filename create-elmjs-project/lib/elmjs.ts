@@ -131,7 +131,26 @@ class HTMLModule extends HTMLElement {
 		if ( view_html !== undefined ) {
 			const temp_elm = document.createElement('template');
 			temp_elm.innerHTML = view_html;
-			this.appendChild(temp_elm.content)
+			if ( temp_elm.content.children.length > 0 ) {
+				const module_elm = temp_elm.content.children[0] as HTMLElement;
+				const new_elm = document.createElement('template');
+				new_elm.innerHTML = module_elm.innerHTML;
+
+				const classes:string[] = [];
+				for(const cls_name of this.classList) classes.push(cls_name);
+
+				const styles:{[k:string]:string} = {};
+				for(let i=0; i<this.style.length; i++) {
+					const name = this.style[i];
+					styles[name] = this.style.getPropertyValue(name);
+				}
+
+				for(const attr of module_elm.attributes) this.setAttribute(attr.name, attr.value);
+				for(const name of classes) this.classList.add(name);
+				for(const entry of Object.entries(styles)) this.style.setProperty(entry[0], entry[1]);
+
+				this.appendChild(new_elm.content)
+			}
 		}
 	}
 	
@@ -270,6 +289,5 @@ function RecursiveParseRelations(root:Element|DocumentFragment, root_map:Exporte
 			Object.keys(element.exportedElements).forEach((key)=>delete element.exportedElements[key]);
 			RecursiveParseRelations(element, element.exportedElements, force_subcontext);
 		}
-		
 	}
 }
