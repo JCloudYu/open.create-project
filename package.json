@@ -1,12 +1,12 @@
 {
 	"private": false,
 	"name": "@jcloudyu/create-elmjs-proj",
-	"version": "1.2.0",
+	"version": "1.2.1",
 	"repository": "https://github.com/JCloudYu/open.create-elmjs-project.git",
 	"author": "JCloudYu",
 	"license": "MIT",
 	"bin": {
-		"create-elmjs-project": "./create-elmjs-project.js"
+		"create-elmjs-proj": "./create-project.js"
 	},
 	"dependencies": {
 		"@types/node": "^20.12.2",
