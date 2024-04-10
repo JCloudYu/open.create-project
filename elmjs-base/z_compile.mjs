@@ -183,13 +183,30 @@ if ( errors.length > 0 ) {
 }
 
 
+const batch_hash = crypto.createHash('sha1').update(style_hash, 'hex').update(script_hash, 'hex').digest('hex');
+const process_info = {
+	digest: {
+		style:script_hash.substring(0, 10),
+		script:script_hash.substring(0, 10),
+		build:batch_hash.substring(0, 10)
+	}
+};
+
 const module_dep = [ "require", "exports", ...module_script_paths ];
 fs.appendFileSync(`./_build/${bootscript_path}`, `
 requirejs.undef('boot.module-env');
+requirejs.undef('boot.process');
 define("boot.module-env", ${JSON.stringify(module_dep)}, function (require, exports) {
+	"use strict";
 	Object.assign(exports, ${JSON.stringify(view_ctnts)});
 });
+define("boot.process, [ "require", "exports" ]", function(require, exports) {
+	"use strict";
+	Object.assign(exports, ${JSON.stringify(process_info)})
+});
 `);
+
+
 
 
 echo("Cleanning up...");
