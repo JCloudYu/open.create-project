@@ -20,7 +20,7 @@ if ( argv.help ) {
 	process.exit(0);
 }
 
-if ( argv._.length <= 2 ) {
+if ( argv._.length < 2 ) {
 	console.error("Project directory path is required!");
 	console.error("Usage: npm init create-project {template_name} {project_path}");
 	process.exit(1);
