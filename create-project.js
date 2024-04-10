@@ -16,13 +16,13 @@ const argv = clipargs
 
 
 if ( argv.help ) {
-	console.log("Usage: npm init create-elmjs-project {project_path}");
+	console.log(  "Usage: npm init create-project {template_name} {project_path}");
 	process.exit(0);
 }
 
-if ( argv.length <= 0 ) {
+if ( argv._.length <= 2 ) {
 	console.error("Project directory path is required!");
-	console.error("Usage: npm init create-elmjs-project {project_path}");
+	console.error("Usage: npm init create-project {template_name} {project_path}");
 	process.exit(1);
 }
 
