@@ -38,7 +38,7 @@ fs.mkdirSync(dest_dir, {recursive:true});
 
 
 // Check project nane
-if ( project_list.indexOf(proj_name) <= 0 ) {
+if ( project_list.indexOf(proj_name) < 0 ) {
 	console.error(`Project [${proj_name}] is not supported!`);
 	process.exit(1);
 }
