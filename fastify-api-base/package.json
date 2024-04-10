@@ -1,9 +1,4 @@
 {
-	"private": true,
-	"name": "ans.sea.node.api",
-	"version": "0.0.1",
-	"main": "_build/boot.api.js",
-	"author": "JCloudYu <j.cloud.yu@gmail.com>",
 	"license": "MIT",
 	"scripts": {
 		"prebuild": "rm -rf _build",

@@ -1,8 +1,8 @@
 {
 	"private": false,
 	"name": "@jcloudyu/create-project",
-	"version": "1.2.2",
-	"repository": "https://github.com/JCloudYu/open.create-elmjs-project.git",
+	"version": "0.1.0",
+	"repository": "https://github.com/JCloudYu/open.create-project.git",
 	"author": "JCloudYu",
 	"license": "MIT",
 	"bin": {
