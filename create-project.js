@@ -4,12 +4,15 @@ const fs = require('node:fs');
 const child = require('node:child_process');
 const clipargs = require("clipargs");
 
+const project_list = require('./project-list.js');
+
 
 
 /** @type {{_:string[]; help?:boolean;}} **/
 const argv = clipargs
 .bool('help', '-h', '--help')
 .parse(process.argv.slice(2));
+
 
 
 if ( argv.help ) {
@@ -24,18 +27,27 @@ if ( argv.length <= 0 ) {
 }
 
 
+
 const cwd = process.cwd();
-const [project_dir] = argv._;
+const [proj_name, project_dir] = argv._;
 
 console.log(`Creating project directory...`);
 const dest_dir = path.resolve(cwd, project_dir);
 fs.mkdirSync(dest_dir, {recursive:true});
 
 
-const source_path = `${__dirname}/create-elmjs-project`;
+
+// Check project nane
+if ( project_list.indexOf(proj_name) <= 0 ) {
+	console.error(`Project [${proj_name}] is not supported!`);
+	process.exit(1);
+}
+const source_path = `${__dirname}/${proj_name}`;
+
+
+
 console.log(`Creating project content..`);
 const scripts = child.execSync(`find ${source_path} -mindepth 1 -type f ! -name ".DS_Store" ! -name "Thumbs.db"`).toString('utf8').split("\n").map((i)=>i.trim());
-//const scripts = (await $`find ${source_path} -mindepth 1 -type f ! -name ".DS_Store" ! -name "Thumbs.db"`.quiet()).stdout.trim().split('\n');
 for(const candidate of scripts) {
 	if ( candidate === '' ) continue;
 	

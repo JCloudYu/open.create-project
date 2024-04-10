@@ -1,0 +1,11 @@
+@HOST=http://127.0.0.1:8088
+@TOKEN=
+
+###
+GET {{HOST}}/api/version
+Accept: application/json
+
+###
+GET {{HOST}}/api/me/session
+Authorization: Bearer {{TOKEN}}
+Accept: application/json

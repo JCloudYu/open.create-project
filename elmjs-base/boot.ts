@@ -1,4 +1,4 @@
-import _ from "/boot.esext.js";
+import "/boot.esext.js";
 import {ElmJS} from "/lib/elmjs.js";
 import {$EventBus, $Route, $Router} from "/runtime.js";
 
