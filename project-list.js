@@ -1,4 +1,4 @@
 module.exports = [
 	'elmjs-base',
-	'fastift-api-base'
+	'fastify-api-base'
 ];
