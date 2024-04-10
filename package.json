@@ -1,7 +1,7 @@
 {
 	"private": false,
 	"name": "@jcloudyu/create-project",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"repository": "https://github.com/JCloudYu/open.create-project.git",
 	"author": "JCloudYu",
 	"license": "MIT",
