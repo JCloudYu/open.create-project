@@ -200,7 +200,7 @@ define("boot.module-env", ${JSON.stringify(module_dep)}, function (require, expo
 	"use strict";
 	Object.assign(exports, ${JSON.stringify(view_ctnts)});
 });
-define("boot.process, [ "require", "exports" ]", function(require, exports) {
+define("boot.process", [ "require", "exports" ], function(require, exports) {
 	"use strict";
 	Object.assign(exports, ${JSON.stringify(process_info)})
 });

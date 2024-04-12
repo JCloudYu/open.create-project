@@ -1,11 +1,9 @@
 import "/boot.esext.js";
 import {ElmJS} from "/lib/elmjs.js";
 import {$EventBus, $Route, $Router} from "/runtime.js";
+import ProcInfo from "/boot.process.js";
 
 (async()=>{
-	// Load and initialize dynamic process runtime info
-	await import('/boot.process.js');
-
 	// Init mdule views
 	ElmJS.registerModuleView((await import('/boot.module-env.js')).default);
 
