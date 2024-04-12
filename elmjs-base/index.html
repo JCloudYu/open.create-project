@@ -18,8 +18,11 @@
 
 			script('./require.min.js')
 			.then(()=>script(bootstrap_path))
-			.then(()=>require(['boot']))
-			.then(()=>window.define = window.require = undefined);
+			.then(()=>{
+				const {define:root_define, require:root_require} = window;
+				window.define = window.require = undefined;
+				root_require(['boot']);
+			});
 
 
 
