@@ -1,45 +1,35 @@
 import "/boot.esext.js";
+
 import {ElmJS} from "/lib/elmjs.js";
-import {$EventBus, $Route, $Router} from "/runtime.js";
+import {HelperTool} from "/lib/helper-tool.js";
+import {$EventBus} from "/runtime.js";
+
 import ProcInfo from "/boot.process.js";
+
+import type {AppMain} from "/modules/app-main/app-main.m.js";
+
+
 
 (async()=>{
 	// Init mdule views
 	ElmJS.registerModuleView((await import('/boot.module-env.js')).default);
 
+	// Load prerequisit scripts
+	await HelperTool.loadResources([
+		{type:'js', path:'./dayjs.min.js'}
+	], ProcInfo.digest.build);
+
 	// Init localiation system
 	await (await import('/boot.localization.js')).init();
 
 
-	// Create app instance
-	const app_view = ElmJS.createElement(/*html*/`
-		<app-view>
-			<div elm-export="viewport" class="viewport">
-				<init-view class="assigned-init-class" elm-root></init-view>
-				<clock-view elm-root>
-					<div>
-						<clock-widget class="assigned-widget-class" elm-export="clock"></clock-widget>
-						<div class="message" elm-export="message"></div>
-					</div>
-				</clock-view>
-			</div>
-		</app-view>
-	`)!;
-	document.body.insertAdjacentElement('afterbegin', app_view);
+	// Create app main instance
+	const app = ElmJS.createElement<AppMain>('<app-main></app-main>')!;
+	document.body.insertAdjacentElement('afterbegin', app);
 
-
-
-	// Init router system
-	// Modify app if the main view container is not app
-	await (await import('/boot.router.js')).init(app_view.exportedElements.viewport);
+	// Init and bind routing events
+	await (await import('/boot.router.js')).init(app);
 	
-
-	// Remove all views from viewport
-	app_view.exportedElements.viewport.innerHTML = '';
-
-	
-	$Route.permData = {"beta-testing":''};
-	$Route.replace('/home');
-	
-	setInterval(()=>$EventBus.emit('tick:second'), 1_000);
+	// Trigger system boot
+	$EventBus.emit('sys:init');
 })();

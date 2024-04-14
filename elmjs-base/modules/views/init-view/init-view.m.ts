@@ -5,7 +5,7 @@ export class InitView extends ElmJS.HTMLModule {
 	constructor() {
 		super();
 
-		$Router.route('/home', {view:this});
+		$Router.route('/', {view:this});
 	}
 }
 

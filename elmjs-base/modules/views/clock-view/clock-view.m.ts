@@ -1,6 +1,6 @@
 import { $EventBus, $L, $Router, $T } from "/runtime.js";
 import {ElmJS} from "/lib/elmjs.js";
-import type {ClockWidget} from "/view-modules/comps/clock-widget/clock-widget.m.js";
+import type {ClockWidget} from "/modules/comps/clock-widget/clock-widget.m.js";
 
 class ClockView extends ElmJS.HTMLModule {
 	#hcallbacks:symbol[] = [];

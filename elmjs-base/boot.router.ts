@@ -1,42 +1,8 @@
-import {$EventBus, $Route, $Router} from "/runtime.js";
+import {$EventBus, $Route} from "/runtime.js";
 
 
 
-export async function init(viewport_selector:string|HTMLElement) {
-	const view_container = typeof viewport_selector === "string" ? document.querySelector(viewport_selector)! : viewport_selector;
-	$Route.on('changed', (e)=>{
-		const state = e.state||{};
-
-		const path = $Route.route.path;
-		const result = $Router.locate<{view:HTMLElement}>(path);
-		if ( !result ) {
-			throw new Error(`No valid handler for route: ${path}!`);
-		}
-
-		
-		const dest = result.meta.view;
-		if ( !dest ) {
-			throw new Error(`This route is not bound to a view: ${path}!`);
-		}
-		
-		
-		const curr_views = Array.from(view_container.children);
-		for(const view of curr_views) {
-			if ( view === dest ) continue;
-			
-			view.remove();
-			dest.emit('state:hide', false);
-		}
-
-		view_container.append(dest);
-		dest.emit('state:show', {params:result.params, data:state}, false);
-	});
-
-
-
-
-
-
+export async function init(view_manager:string|EventTarget) {
 	document.body.on('click', (e:Event)=>{
 		const target = e.target as HTMLElement;
 		if ( !target ) return;
