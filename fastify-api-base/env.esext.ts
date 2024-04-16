@@ -1,7 +1,9 @@
-// JSON
-interface JSON {
-	encode: { <DataType = any>(data: DataType): string };
-	decode: { <DataType = any>(json_str: string): DataType | undefined };
+declare global {
+	// JSON
+	interface JSON {
+		encode: { <DataType = any>(data: DataType): string };
+		decode: { <DataType = any>(json_str: string): DataType | undefined };
+	}
 }
 JSON.encode = function(data) {
 	return JSON.stringify(data);
@@ -13,21 +15,22 @@ JSON.decode = function(json) {
 }
 
 
-
-// Date
-interface DateConstructor {
-	present: Date;
-	from(value: number | string): Date;
-	unix(): number;
-	zoneShift(): number;
-}
-interface Date {
-	unix: number;
-	time: number;
-	zoneShift: number;
-	getUnixTime(): number;
-	toLocaleISOString(milli?: boolean): string;
-	toLocalISOString(milli?: boolean): string;
+declare global {
+	// Date
+	interface DateConstructor {
+		present: Date;
+		from(value: number | string): Date;
+		unix(): number;
+		zoneShift(): number;
+	}
+	interface Date {
+		unix: number;
+		time: number;
+		zoneShift: number;
+		getUnixTime(): number;
+		toLocaleISOString(milli?: boolean): string;
+		toLocalISOString(milli?: boolean): string;
+	}
 }
 Object.defineProperty(Date, 'from', {
 	configurable: true, enumerable: false, writable: true,
@@ -132,8 +135,10 @@ Object.defineProperty(Date.prototype, 'zoneShift', {
 
 
 // Error
-interface Error {
-	stack_trace: string[];
+declare global {
+	interface Error {
+		stack_trace: string[];
+	}
 }
 if (typeof Error !== "undefined") {
 	Object.defineProperty(Error.prototype, 'stack_trace', {
@@ -150,9 +155,11 @@ if (typeof Error !== "undefined") {
 
 
 // String
-interface StringConstructor {
-	utf8Encode:{(str:string):Uint8Array};
-	utf8Decode:{(buff:ArrayBuffer|BufferView):string};
+declare global {
+	interface StringConstructor {
+		utf8Encode:{(str:string, pure_js?:boolean):Uint8Array};
+		utf8Decode:{(buff:ArrayBuffer|BufferView, pure_js?:boolean):string};
+	}
 }
 (()=>{
 	const encoder = typeof TextEncoder !== "undefined" ? new TextEncoder() : null;
@@ -160,12 +167,12 @@ interface StringConstructor {
 
 	Object.defineProperty(String, 'utf8Encode', {
 		configurable:false, enumerable:false, writable:true,
-		value: function(js_str:string) {
+		value: function(js_str:string, pure_js:boolean=false) {
 			if (typeof js_str !== "string") {
 				throw new TypeError("Given input argument must be a js string!");
 			}
 
-			if ( encoder ) {
+			if ( !pure_js && encoder ) {
 				return encoder.encode(js_str);
 			}
 
@@ -198,7 +205,7 @@ interface StringConstructor {
 	const UTF8_DECODE_CHUNK_SIZE = 100;
 	Object.defineProperty(String, 'utf8Decode', {
 		configurable:true, enumerable:false, writable:true,
-		value: function(uint8:ArrayBuffer|BufferView) {
+		value: function(uint8:ArrayBuffer|BufferView, pure_js:boolean=false) {
 			if (uint8 instanceof ArrayBuffer) {
 				uint8 = new Uint8Array(uint8);
 			}
@@ -210,13 +217,12 @@ interface StringConstructor {
 			if (!(uint8 instanceof Uint8Array)) {
 				throw new TypeError("Given input must be an Uint8Array contains UTF8 encoded value!");
 			}
-
-
-			if ( decoder ) {
+			
+			if ( !pure_js && decoder ) {
 				return decoder.decode(uint8);
 			}
 			
-			
+
 			
 			let code_points = [];
 			for (let i = 0; i < uint8.length;) {
@@ -266,56 +272,212 @@ interface StringConstructor {
 
 
 // Typed Array
-declare type BufferView = Uint8ClampedArray | Uint8Array | Int8Array | Uint16Array | Int16Array | Uint32Array | Int32Array | Float32Array | Float64Array | DataView;
-interface ArrayBuffer {
-	bytes: Uint8Array;
-}
-interface Uint8ArrayConstructor {
-	readFrom(data: ArrayBuffer | BufferView | number[]): Uint8Array;
-	readFrom(data: string, conversion:'b62hex'|'b32hex'|'hex'|'bits'|'utf8'|62|32|16|2): Uint8Array;
-	binaryCompare(a: ArrayBuffer | BufferView, b: ArrayBuffer | BufferView): -1 | 0 | 1;
-	binaryDump(buffer: ArrayBuffer | BufferView, format?: 2|16|32|62, padding?: boolean): string;
-	binaryConcat(buffers:(ArrayBuffer|BufferView)[]):Uint8Array;
+declare global {
+	type BufferView = Uint8ClampedArray | Uint8Array | Int8Array | Uint16Array | Int16Array | Uint32Array | Int32Array | Float32Array | Float64Array | DataView;
+	type BinaryConversionType_Numeric = 2|16|32|62|64;
+	type BinaryConversionType_String = 'bits'|'hex'|'b32hex'|'b62hex'|'base64'|'b64url'|'utf8';
+	type BinaryConversionType = BinaryConversionType_Numeric|BinaryConversionType_String;
+	interface ArrayBuffer {
+		bytes: Uint8Array;
+	}
+	interface Uint8ArrayConstructor {
+		readFrom(data: ArrayBuffer | BufferView | number[]): Uint8Array;
+		readFrom(data: string, conversion:BinaryConversionType): Uint8Array;
+		binaryCompare(a: ArrayBuffer | BufferView, b: ArrayBuffer | BufferView): -1 | 0 | 1;
+		binaryFrom(data: ArrayBuffer | BufferView | number[]): Uint8Array;
+		binaryFrom(data: string, conversion:BinaryConversionType): Uint8Array;
+		binaryDump(buffer: ArrayBuffer | BufferView, format?:BinaryConversionType, padding?: boolean): string;
+		binaryConcat(buffers:(ArrayBuffer|BufferView)[]):Uint8Array;
+	}
 }
 (function(){
 	const BIT_FORMAT = /^(0b|0B)?([01]+)$/;
+	
 	const HEX_FORMAT = /^(0x)?([0-9a-fA-F]+)$/;
 	const HEX_MAP = "0123456789abcdef";
-	const HEX_MAP_R:{[enc:string]:number} = {
-		"0": 0,	 "1": 1,  "2": 2,  "3": 3,
-		"4": 4,	 "5": 5,  "6": 6,  "7": 7,
-		"8": 8,  "9": 9,  "a": 10, "b": 11,
-		"c": 12, "d": 13, "e": 14, "f": 15
-	};
+	const HEX_MAP_R:{[enc:string]:number} = Object.fromEntries(
+		HEX_MAP.split('').map((v, i)=>[v,i]).concat(
+			HEX_MAP.substring(10).toUpperCase().split('').map((v,i)=>[v,i])
+		)
+	);
+
 	const B32HEX_FORMAT = /^([0-9a-vA-V]+)$/;
 	const B32HEX_MAP = "0123456789abcdefghijklmnopqrstuv";
-	const B32HEX_MAP_R:{[enc:string]:number} = {
-		'0':  0, '1':  1, '2':  2, '3':  3, '4':  4, '5':  5, '6':  6, '7':  7, '8':  8, '9':  9, 
-		'A': 10, 'B': 11, 'C': 12, 'D': 13, 'E': 14, 'F': 15, 'G': 16, 'H': 17, 'I': 18, 'J': 19, 'K': 20, 'L': 21, 'M': 22,
-		'N': 23, 'O': 24, 'P': 25, 'Q': 26, 'R': 27, 'S': 28, 'T': 29, 'U': 30, 'V': 31, 
-		'a': 10, 'b': 11, 'c': 12, 'd': 13, 'e': 14, 'f': 15, 'g': 16, 'h': 17, 'i': 18, 'j': 19, 'k': 20, 'l': 21, 'm': 22,
-		'n': 23, 'o': 24, 'p': 25, 'q': 26, 'r': 27, 's': 28, 't': 29, 'u': 30, 'v': 31
-	};
+	const B32HEX_MAP_R:{[enc:string]:number} = Object.fromEntries(
+		B32HEX_MAP.split('').map((v, i)=>[v,i]).concat(
+			B32HEX_MAP.substring(10).toUpperCase().split('').map((v,i)=>[v,i])
+		)
+	);
+
 	const B62HEX_FORMAT = /^([0-9a-zA-Z]+)$/;
-	const B62HEX_MAP = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-	const B62HEX_MAP_R:{[enc:string]:number} = {
-		'0':  0, '1':  1, '2':  2, '3':  3, '4':  4, '5':  5, '6':  6, '7':  7, '8':  8, '9':  9, 
-		'a': 10, 'b': 11, 'c': 12, 'd': 13, 'e': 14, 'f': 15, 'g': 16, 'h': 17, 'i': 18, 'j': 19, 
-		'k': 20, 'l': 21, 'm': 22, 'n': 23, 'o': 24, 'p': 25, 'q': 26, 'r': 27, 's': 28, 't': 29,
-		'u': 30, 'v': 31, 'w': 32, 'x': 33, 'y': 34, 'z': 35, 'A': 36, 'B': 37, 'C': 38, 'D': 39, 
-		'E': 40, 'F': 41, 'G': 42, 'H': 43, 'I': 44, 'J': 45, 'K': 46, 'L': 47, 'M': 48, 'N': 49,
-		'O': 50, 'P': 51, 'Q': 52, 'R': 53, 'S': 54, 'T': 55, 'U': 56, 'V': 57, 'W': 58, 'X': 59, 
-		'Y': 60, 'Z': 61
-	};
+	const B62HEX_MAP = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+	const B62HEX_MAP_R:{[enc:string]:number} = Object.fromEntries(B62HEX_MAP.split('').map((v, i)=>[v,i]));
+
+	const B64_FORMAT = /^([0-9a-zA-Z-_+/]+)={0,2}$/;
+	const B64MAP = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+	const B64URLMAP = B64MAP.substring(0, B64MAP.length-2) + '-_';
+	const B64MAP_R:{[enc:string]:number} = Object.fromEntries(B64MAP.split('').map((v, i)=>[v,i]).concat([['-', 62], ['_', 63]]));
+	
 
 	Object.defineProperty(ArrayBuffer.prototype, 'bytes', {
 		configurable:true, enumerable:false, 
 		get: function() { return new Uint8Array(this); }
 	});
 
-	Object.defineProperty(Uint8Array, 'readFrom', {
+
+	Object.defineProperty(Uint8Array, 'binaryDump', {
 		configurable: true, enumerable: false, writable: true,
-		value: function(input:string|ArrayBuffer|BufferView|number[], conversion_info?: 'b62hex'|'b32hex'|'hex'|'bits'|'utf8'|62|32|16|2): Uint8Array {
+        value: function (buffer:ArrayBuffer|BufferView, format?:BinaryConversionType):string {
+            if (format === void 0) { format = 16; }
+            let bytes = ExtractBytes(buffer);
+            if (bytes === null) {
+                throw new TypeError("Argument 1 expects an instance of ArrayBuffer, TypedArray or DataView!");
+            }
+			
+            let result = '';
+			if ( bytes.length < 1 ) return result;
+
+            switch (format) {
+				case 64: 
+				case 'base64': 
+				case 'b64url': {
+					const is_b64url = format === 'b64url';
+					const ENCODE_MAP = is_b64url ? B64URLMAP : B64MAP;
+
+					var v1, v2, v3, base64Str = '', length = bytes.length;
+					for( var i = 0, count = ((length/3)>>>0) * 3; i < count; ){
+						v1 = bytes[i++];
+						v2 = bytes[i++];
+						v3 = bytes[i++];
+						base64Str += ENCODE_MAP[v1 >>> 2] +
+							ENCODE_MAP[(v1 << 4 | v2 >>> 4) & 63] +
+							ENCODE_MAP[(v2 << 2 | v3 >>> 6) & 63] +
+							ENCODE_MAP[v3 & 63];
+					}
+					
+					// remain char
+					var remain = length - count;
+					if( remain === 1 ){
+						v1 = bytes[i];
+						base64Str += ENCODE_MAP[v1 >>> 2] + ENCODE_MAP[(v1 << 4) & 63];
+						
+						if ( !is_b64url ) { base64Str += '=='; }
+					}
+					else if( remain === 2 ){
+						v1 = bytes[i++];
+						v2 = bytes[i];
+						base64Str += ENCODE_MAP[v1 >>> 2] +
+							ENCODE_MAP[(v1 << 4 | v2 >>> 4) & 63] +
+							ENCODE_MAP[(v2 << 2) & 63];
+							
+						if ( !is_b64url ) { base64Str += '='; }
+					}
+					return base64Str;
+				}
+				case 62:
+				case 'b62hex': {
+					let data:string[] = [], zeros:string = '', end = 0;
+					for(; end<bytes.length; end++) {
+						if ( bytes[end] !== 0x00 ) break;
+						zeros += '0';
+					}
+
+					let i = bytes.length-1, pow = 0, num = 0n;
+					while(i>=end) {
+						num += BigInt(bytes[i]) * (256n**BigInt(pow));
+						i--; pow++;
+					}
+
+					while(num > 0n) {
+						data.push(B62HEX_MAP[Number(num%62n)]);
+						num /= 62n;
+					}
+					return zeros + data.reverse().join('');
+				}
+				case 32: 
+				case 'b32hex': {
+					// Run complete bundles
+					let begin, loop = Math.floor(bytes.length/5);
+					for (let run=0; run<loop; run++) {
+						begin = run * 5;
+						result += B32HEX_MAP[  bytes[begin]           >> 3];								// 0
+						result += B32HEX_MAP[ (bytes[begin  ] & 0x07) << 2 | (bytes[begin+1] >> 6)];	// 1
+						result += B32HEX_MAP[ (bytes[begin+1] & 0x3E) >> 1];								// 2
+						result += B32HEX_MAP[ (bytes[begin+1] & 0x01) << 4 | (bytes[begin+2] >> 4)];	// 3
+						result += B32HEX_MAP[ (bytes[begin+2] & 0x0F) << 1 | (bytes[begin+3] >> 7)];	// 4
+						result += B32HEX_MAP[ (bytes[begin+3] & 0x7C) >> 2];								// 5
+						result += B32HEX_MAP[ (bytes[begin+3] & 0x03) << 3 | (bytes[begin+4] >> 5)];	// 6
+						result += B32HEX_MAP[  bytes[begin+4] & 0x1F];										// 7
+					}
+					
+					// Run remains
+					let remain = bytes.length % 5;
+					if ( remain === 0 ) { return result; }
+					
+					
+					begin = loop*5;
+					if ( remain === 1 ) {
+						result += B32HEX_MAP[  bytes[begin]           >> 3];								// 0
+						result += B32HEX_MAP[ (bytes[begin  ] & 0x07) << 2];								// 1
+					}
+					else
+					if ( remain === 2 ) {
+						result += B32HEX_MAP[  bytes[begin]           >> 3];								// 0
+						result += B32HEX_MAP[ (bytes[begin  ] & 0x07) << 2 | (bytes[begin+1] >> 6)];	// 1
+						result += B32HEX_MAP[ (bytes[begin+1] & 0x3E) >> 1];								// 2
+						result += B32HEX_MAP[ (bytes[begin+1] & 0x01) << 4];								// 3
+					}
+					else
+					if ( remain === 3 ) {
+						result += B32HEX_MAP[  bytes[begin]           >> 3];								// 0
+						result += B32HEX_MAP[ (bytes[begin  ] & 0x07) << 2 | (bytes[begin+1] >> 6)];	// 1
+						result += B32HEX_MAP[ (bytes[begin+1] & 0x3E) >> 1];								// 2
+						result += B32HEX_MAP[ (bytes[begin+1] & 0x01) << 4 | (bytes[begin+2] >> 4)];	// 3
+						result += B32HEX_MAP[ (bytes[begin+2] & 0x0F) << 1];								// 4
+					}
+					else
+					if ( remain === 4 ) {
+						result += B32HEX_MAP[  bytes[begin]           >> 3];								// 0
+						result += B32HEX_MAP[ (bytes[begin  ] & 0x07) << 2 | (bytes[begin+1] >> 6)];	// 1
+						result += B32HEX_MAP[ (bytes[begin+1] & 0x3E) >> 1];								// 2
+						result += B32HEX_MAP[ (bytes[begin+1] & 0x01) << 4 | (bytes[begin+2] >> 4)];	// 3
+						result += B32HEX_MAP[ (bytes[begin+2] & 0x0F) << 1 | (bytes[begin+3] >> 7)];	// 4
+						result += B32HEX_MAP[ (bytes[begin+3] & 0x7C) >> 2];								// 5
+						result += B32HEX_MAP[ (bytes[begin+3] & 0x03) << 3];								// 6
+					}
+					return result;
+				}
+                case 16: 
+				case 'hex': {
+                    for (let i = 0; i < bytes.length; i++) {
+                        let value = bytes[i];
+                        result += HEX_MAP[(value & 0xF0) >>> 4] + HEX_MAP[value & 0x0F];
+                    }
+                    return result;
+				}
+                case 2: 
+				case 'bits': {
+                    for (let i = 0; i < bytes.length; i++) {
+                        let value = bytes[i];
+                        for (let k = 7; k >= 0; k--) {
+                            result += ((value >>> k) & 0x01) ? '1' : '0';
+                        }
+                    }
+                    return result;
+				}
+				case "utf8": {
+					return String.utf8Decode(bytes);
+				}
+
+                default:
+                    throw new RangeError("Unsupported encoding type!");
+            }
+        }
+    });
+
+	Object.defineProperty(Uint8Array, 'binaryFrom', {
+		configurable: true, enumerable: false, writable: true,
+		value: function(input:string|ArrayBuffer|BufferView|number[], conversion_info?: 'b64sort'|'b64url'|'base64'|'b62hex'|'b32hex'|'hex'|'bits'|'utf8'|64|62|32|16|2): Uint8Array {
 			if (Array.isArray(input)) {
 				return new Uint8Array(input);
 			}
@@ -327,12 +489,7 @@ interface Uint8ArrayConstructor {
 						throw new RangeError("Input argument is not a valid hex string!");
 					}
 					let hex_string = matches[2];
-					if (hex_string.length % 2 === 0) {
-						hex_string = hex_string.toLowerCase();
-					}
-					else {
-						hex_string = '0' + hex_string.toLowerCase();
-					}
+					hex_string = ((hex_string.length % 2 === 0) ? '' : '0') + hex_string;
 					let buff = new Uint8Array((hex_string.length / 2) | 0);
 					for (let i = 0; i < buff.length; i++) {
 						let offset = i * 2;
@@ -473,9 +630,73 @@ interface Uint8ArrayConstructor {
 
 					return Uint8Array.from(leading_zeros.concat(bytes.reverse()));
 				}
-				else {
+				else if (conversion_info === 'base64' || conversion_info === 'b64url' || conversion_info === 64) {
+					let bytes:Uint8Array, matches = input.match(B64_FORMAT);
+					if (!matches) {
+						throw new RangeError("Input argument is not a valid base64/base64url string!");
+					}
+					
+					input = matches[1];
+					const length = input.length;
+					const remain = length % 4;
+					switch( remain ) {
+						case 0:
+							bytes = new Uint8Array((length/4|0)*3);
+							break;
+							
+						case 2:
+							bytes = new Uint8Array((length/4|0)*3 + 1);
+							break;
+							
+						case 3:
+							bytes = new Uint8Array((length/4|0)*3 + 2);
+							break;
+							
+						default:
+							throw new RangeError("Input argument is not a valid base64/base64url string!");
+					}
+					
+
+					
+					let v1, v2, v3, v4, i=0, j=0, end=(length/4|0)*4;
+					while ( i<end ) {
+						v1 = B64MAP_R[input[i++]];
+						v2 = B64MAP_R[input[i++]];
+						v3 = B64MAP_R[input[i++]];
+						v4 = B64MAP_R[input[i++]];
+						bytes[j++] = (v1 << 2 | v2 >>> 4);
+						bytes[j++] = (v2 << 4 | v3 >>> 2);
+						bytes[j++] = (v3 << 6 | v4);
+					}
+					
+					
+					
+					// Decode remaining bytes
+					switch( remain ) {
+						case 2:
+							v1 = B64MAP_R[input.charAt(i++)];
+							v2 = B64MAP_R[input.charAt(i)];
+							bytes[j] = (v1 << 2 | v2 >>> 4);
+							break;
+						
+						case 3:
+							v1 = B64MAP_R[input.charAt(i++)];
+							v2 = B64MAP_R[input.charAt(i++)];
+							v3 = B64MAP_R[input.charAt(i)];
+							bytes[j] = (v1 << 2 | v2 >>> 4);
+							bytes[j+1] = (v2 << 4 | v3 >>> 2);
+							break;
+					}
+					
+					return bytes;
+				}
+				else 
+				if ( conversion_info === 'utf8' ){
 					return String.utf8Encode(input);
 				}
+				else {
+					throw new RangeError("Unsupported encoding type!");
+				}	
 			}
 
 			let result = ExtractBytes(input);
@@ -484,6 +705,10 @@ interface Uint8ArrayConstructor {
 			}
 			return result;
 		}
+	});
+	Object.defineProperty(Uint8Array, 'readFrom', {
+		configurable: true, enumerable: false, writable: true,
+		value: Uint8Array.binaryFrom
 	});
 	
 	Object.defineProperty(Uint8Array, 'binaryCompare', {
@@ -504,114 +729,6 @@ interface Uint8ArrayConstructor {
             return 0;
         }
     });
-
-	Object.defineProperty(Uint8Array, 'binaryDump', {
-		configurable: true, enumerable: false, writable: true,
-        value: function (buffer:ArrayBuffer|BufferView, format?:2|16|32|62, padding?:boolean):string {
-            if (format === void 0) { format = 16; }
-            if (padding === void 0) { padding = true; }
-            let bytes = ExtractBytes(buffer);
-            if (bytes === null) {
-                throw new TypeError("Argument 1 expects an instance of ArrayBuffer, TypedArray or DataView!");
-            }
-			
-            let result = '';
-			if ( bytes.length < 1 ) return result;
-
-            switch (format) {
-				case 62: {
-					let data:string[] = [], zeros:string = '', end = 0;
-					for(; end<bytes.length; end++) {
-						if ( bytes[end] !== 0x00 ) break;
-						zeros += '0';
-					}
-
-					let i = bytes.length-1, pow = 0, num = 0n;
-					while(i>=end) {
-						num += BigInt(bytes[i]) * (256n**BigInt(pow));
-						i--; pow++;
-					}
-
-					while(num > 0n) {
-						data.push(B62HEX_MAP[Number(num%62n)]);
-						num /= 62n;
-					}
-					return zeros + data.reverse().join('');
-				}
-				case 32: {
-					// Run complete bundles
-					let begin, loop = Math.floor(bytes.length/5);
-					for (let run=0; run<loop; run++) {
-						begin = run * 5;
-						result += B32HEX_MAP[  bytes[begin]           >> 3];								// 0
-						result += B32HEX_MAP[ (bytes[begin  ] & 0x07) << 2 | (bytes[begin+1] >> 6)];	// 1
-						result += B32HEX_MAP[ (bytes[begin+1] & 0x3E) >> 1];								// 2
-						result += B32HEX_MAP[ (bytes[begin+1] & 0x01) << 4 | (bytes[begin+2] >> 4)];	// 3
-						result += B32HEX_MAP[ (bytes[begin+2] & 0x0F) << 1 | (bytes[begin+3] >> 7)];	// 4
-						result += B32HEX_MAP[ (bytes[begin+3] & 0x7C) >> 2];								// 5
-						result += B32HEX_MAP[ (bytes[begin+3] & 0x03) << 3 | (bytes[begin+4] >> 5)];	// 6
-						result += B32HEX_MAP[  bytes[begin+4] & 0x1F];										// 7
-					}
-					
-					// Run remains
-					let remain = bytes.length % 5;
-					if ( remain === 0 ) { return result; }
-					
-					
-					begin = loop*5;
-					if ( remain === 1 ) {
-						result += B32HEX_MAP[  bytes[begin]           >> 3];								// 0
-						result += B32HEX_MAP[ (bytes[begin  ] & 0x07) << 2];								// 1
-					}
-					else
-					if ( remain === 2 ) {
-						result += B32HEX_MAP[  bytes[begin]           >> 3];								// 0
-						result += B32HEX_MAP[ (bytes[begin  ] & 0x07) << 2 | (bytes[begin+1] >> 6)];	// 1
-						result += B32HEX_MAP[ (bytes[begin+1] & 0x3E) >> 1];								// 2
-						result += B32HEX_MAP[ (bytes[begin+1] & 0x01) << 4];								// 3
-					}
-					else
-					if ( remain === 3 ) {
-						result += B32HEX_MAP[  bytes[begin]           >> 3];								// 0
-						result += B32HEX_MAP[ (bytes[begin  ] & 0x07) << 2 | (bytes[begin+1] >> 6)];	// 1
-						result += B32HEX_MAP[ (bytes[begin+1] & 0x3E) >> 1];								// 2
-						result += B32HEX_MAP[ (bytes[begin+1] & 0x01) << 4 | (bytes[begin+2] >> 4)];	// 3
-						result += B32HEX_MAP[ (bytes[begin+2] & 0x0F) << 1];								// 4
-					}
-					else
-					if ( remain === 4 ) {
-						result += B32HEX_MAP[  bytes[begin]           >> 3];								// 0
-						result += B32HEX_MAP[ (bytes[begin  ] & 0x07) << 2 | (bytes[begin+1] >> 6)];	// 1
-						result += B32HEX_MAP[ (bytes[begin+1] & 0x3E) >> 1];								// 2
-						result += B32HEX_MAP[ (bytes[begin+1] & 0x01) << 4 | (bytes[begin+2] >> 4)];	// 3
-						result += B32HEX_MAP[ (bytes[begin+2] & 0x0F) << 1 | (bytes[begin+3] >> 7)];	// 4
-						result += B32HEX_MAP[ (bytes[begin+3] & 0x7C) >> 2];								// 5
-						result += B32HEX_MAP[ (bytes[begin+3] & 0x03) << 3];								// 6
-					}
-					break;
-				}
-                case 16: {
-                    for (let i = 0; i < bytes.length; i++) {
-                        let value = bytes[i];
-                        result += HEX_MAP[(value & 0xF0) >>> 4] + HEX_MAP[value & 0x0F];
-                    }
-                    break;
-				}
-                case 2: {
-                    for (let i = 0; i < bytes.length; i++) {
-                        let value = bytes[i];
-                        for (let k = 7; k >= 0; k--) {
-                            result += ((value >>> k) & 0x01) ? '1' : '0';
-                        }
-                    }
-                    break;
-				}
-                default:
-                    throw new RangeError("Unsupported numeric representation!");
-            }
-            return padding ? result : result.replace(/^0+/, '');
-        }
-    });
 	
 	Object.defineProperty(Uint8Array, 'binaryConcat', {
 		configurable: true, enumerable: false, writable: true,
@@ -626,7 +743,7 @@ interface Uint8ArrayConstructor {
 				}
 				else
 				if ( ArrayBuffer.isView(c) ) {
-					return new Uint8Array(c.buffer);
+					return new Uint8Array(c.buffer, c.byteOffset, c.byteLength);
 				}
 				else {
 					return new Uint8Array(0);
@@ -655,7 +772,7 @@ interface Uint8ArrayConstructor {
 			}
 		}
 		if (ArrayBuffer.isView(content)) {
-			return new Uint8Array(content.buffer);
+			return new Uint8Array(content.buffer, content.byteOffset, content.byteLength);
 		}
 		if (content instanceof ArrayBuffer) {
 			return new Uint8Array(content);
@@ -665,9 +782,12 @@ interface Uint8ArrayConstructor {
 })();
 
 
-interface ObjectConstructor {
-	stripProperties<DataType extends Record<string, any>=any, RemoveProps extends (keyof DataType)[] = (keyof DataType)[]>(data:DataType, props:RemoveProps):Omit<DataType, RemoveProps[number]>;
-	pickProperties<DataType extends Record<string, any>=any, PickedProps extends (keyof DataType)[] = (keyof DataType)[]>(data:DataType, props:PickedProps):Pick<DataType, PickedProps[number]>;
+
+declare global {
+	interface ObjectConstructor {
+		stripProperties<DataType extends Record<string, any>=any, RemoveProps extends (keyof DataType)[] = (keyof DataType)[]>(data:DataType, props:RemoveProps):Omit<DataType, RemoveProps[number]>;
+		pickProperties<DataType extends Record<string, any>=any, PickedProps extends (keyof DataType)[] = (keyof DataType)[]>(data:DataType, props:PickedProps):Pick<DataType, PickedProps[number]>;
+	}
 }
 (async()=>{
 	Object.defineProperty(Object, 'stripProperties', {
@@ -694,3 +814,255 @@ interface ObjectConstructor {
 		}
 	});
 })();
+
+export {};
+
+
+
+
+
+if ( typeof require !== 'undefined' && typeof module !== "undefined" && require.main === module ) {
+	console.log("String.utf8Encode / String.utf8Decode");
+	{
+		const ground_truth = `
+Original by Markus Kuhn, adapted for HTML by Martin Dürst.
+
+UTF-8 encoded sample plain-text file
+‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+Markus Kuhn [ˈmaʳkʊs kuːn] <mkuhn@acm.org> — 1999-08-20
+
+
+The ASCII compatible UTF-8 encoding of ISO 10646 and Unicode
+plain-text files is defined in RFC 2279 and in ISO 10646-1 Annex R.
+
+
+Using Unicode/UTF-8, you can write in emails and source code things such as
+
+Mathematics and Sciences:
+
+  ∮ E⋅da = Q,  n → ∞, ∑ f(i) = ∏ g(i), ∀x∈ℝ: ⌈x⌉ = −⌊−x⌋, α ∧ ¬β = ¬(¬α ∨ β),
+
+  ℕ ⊆ ℕ₀ ⊂ ℤ ⊂ ℚ ⊂ ℝ ⊂ ℂ, ⊥ < a ≠ b ≡ c ≤ d ≪ ⊤ ⇒ (A ⇔ B),
+
+  2H₂ + O₂ ⇌ 2H₂O, R = 4.7 kΩ, ⌀ 200 mm
+
+Linguistics and dictionaries:
+
+  ði ıntəˈnæʃənəl fəˈnɛtık əsoʊsiˈeıʃn
+  Y [ˈʏpsilɔn], Yen [jɛn], Yoga [ˈjoːgɑ]
+
+APL:
+
+  ((V⍳V)=⍳⍴V)/V←,V    ⌷←⍳→⍴∆∇⊃‾⍎⍕⌈
+
+Nicer typography in plain text files:
+
+  ╔══════════════════════════════════════════╗
+  ║                                          ║
+  ║   • ‘single’ and “double” quotes         ║
+  ║                                          ║
+  ║   • Curly apostrophes: “We’ve been here” ║
+  ║                                          ║
+  ║   • Latin-1 apostrophe and accents: '´\`  ║
+  ║                                          ║
+  ║   • ‚deutsche‘ „Anführungszeichen“       ║
+  ║                                          ║
+  ║   • †, ‡, ‰, •, 3–4, —, −5/+5, ™, …      ║
+  ║                                          ║
+  ║   • ASCII safety test: 1lI|, 0OD, 8B     ║
+  ║                      ╭─────────╮         ║
+  ║   • the euro symbol: │ 14.95 € │         ║
+  ║                      ╰─────────╯         ║
+  ╚══════════════════════════════════════════╝
+
+Greek (in Polytonic):
+
+  The Greek anthem:
+
+  Σὲ γνωρίζω ἀπὸ τὴν κόψη
+  τοῦ σπαθιοῦ τὴν τρομερή,
+  σὲ γνωρίζω ἀπὸ τὴν ὄψη
+  ποὺ μὲ βία μετράει τὴ γῆ.
+
+  ᾿Απ᾿ τὰ κόκκαλα βγαλμένη
+  τῶν ῾Ελλήνων τὰ ἱερά
+  καὶ σὰν πρῶτα ἀνδρειωμένη
+  χαῖρε, ὦ χαῖρε, ᾿Ελευθεριά!
+
+  From a speech of Demosthenes in the 4th century BC:
+
+  Οὐχὶ ταὐτὰ παρίσταταί μοι γιγνώσκειν, ὦ ἄνδρες ᾿Αθηναῖοι,
+  ὅταν τ᾿ εἰς τὰ πράγματα ἀποβλέψω καὶ ὅταν πρὸς τοὺς
+  λόγους οὓς ἀκούω· τοὺς μὲν γὰρ λόγους περὶ τοῦ
+  τιμωρήσασθαι Φίλιππον ὁρῶ γιγνομένους, τὰ δὲ πράγματ᾿ 
+  εἰς τοῦτο προήκοντα,  ὥσθ᾿ ὅπως μὴ πεισόμεθ᾿ αὐτοὶ
+  πρότερον κακῶς σκέψασθαι δέον. οὐδέν οὖν ἄλλο μοι δοκοῦσιν
+  οἱ τὰ τοιαῦτα λέγοντες ἢ τὴν ὑπόθεσιν, περὶ ἧς βουλεύεσθαι,
+  οὐχὶ τὴν οὖσαν παριστάντες ὑμῖν ἁμαρτάνειν. ἐγὼ δέ, ὅτι μέν
+  ποτ᾿ ἐξῆν τῇ πόλει καὶ τὰ αὑτῆς ἔχειν ἀσφαλῶς καὶ Φίλιππον
+  τιμωρήσασθαι, καὶ μάλ᾿ ἀκριβῶς οἶδα· ἐπ᾿ ἐμοῦ γάρ, οὐ πάλαι
+  γέγονεν ταῦτ᾿ ἀμφότερα· νῦν μέντοι πέπεισμαι τοῦθ᾿ ἱκανὸν
+  προλαβεῖν ἡμῖν εἶναι τὴν πρώτην, ὅπως τοὺς συμμάχους
+  σώσομεν. ἐὰν γὰρ τοῦτο βεβαίως ὑπάρξῃ, τότε καὶ περὶ τοῦ
+  τίνα τιμωρήσεταί τις καὶ ὃν τρόπον ἐξέσται σκοπεῖν· πρὶν δὲ
+  τὴν ἀρχὴν ὀρθῶς ὑποθέσθαι, μάταιον ἡγοῦμαι περὶ τῆς
+  τελευτῆς ὁντινοῦν ποιεῖσθαι λόγον.
+
+  Δημοσθένους, Γ´ ᾿Ολυνθιακὸς
+
+Georgian:
+
+  From a Unicode conference invitation:
+
+  გთხოვთ ახლავე გაიაროთ რეგისტრაცია Unicode-ის მეათე საერთაშორისო
+  კონფერენციაზე დასასწრებად, რომელიც გაიმართება 10-12 მარტს,
+  ქ. მაინცში, გერმანიაში. კონფერენცია შეჰკრებს ერთად მსოფლიოს
+  ექსპერტებს ისეთ დარგებში როგორიცაა ინტერნეტი და Unicode-ი,
+  ინტერნაციონალიზაცია და ლოკალიზაცია, Unicode-ის გამოყენება
+  ოპერაციულ სისტემებსა, და გამოყენებით პროგრამებში, შრიფტებში,
+  ტექსტების დამუშავებასა და მრავალენოვან კომპიუტერულ სისტემებში.
+
+Russian:
+
+  From a Unicode conference invitation:
+
+  Зарегистрируйтесь сейчас на Десятую Международную Конференцию по
+  Unicode, которая состоится 10-12 марта 1997 года в Майнце в Германии.
+  Конференция соберет широкий круг экспертов по  вопросам глобального
+  Интернета и Unicode, локализации и интернационализации, воплощению и
+  применению Unicode в различных операционных системах и программных
+  приложениях, шрифтах, верстке и многоязычных компьютерных системах.
+
+Thai (UCS Level 2):
+
+  Excerpt from a poetry on The Romance of The Three Kingdoms (a Chinese
+  classic 'San Gua'):
+
+  [----------------------------|------------------------]
+    ๏ แผ่นดินฮั่นเสื่อมโทรมแสนสังเวช  พระปกเกศกองบู๊กู้ขึ้นใหม่
+  สิบสองกษัตริย์ก่อนหน้าแลถัดไป       สององค์ไซร้โง่เขลาเบาปัญญา
+    ทรงนับถือขันทีเป็นที่พึ่ง           บ้านเมืองจึงวิปริตเป็นนักหนา
+  โฮจิ๋นเรียกทัพทั่วหัวเมืองมา         หมายจะฆ่ามดชั่วตัวสำคัญ
+    เหมือนขับไสไล่เสือจากเคหา      รับหมาป่าเข้ามาเลยอาสัญ
+  ฝ่ายอ้องอุ้นยุแยกให้แตกกัน          ใช้สาวนั้นเป็นชนวนชื่นชวนใจ
+    พลันลิฉุยกุยกีกลับก่อเหตุ          ช่างอาเพศจริงหนาฟ้าร้องไห้
+  ต้องรบราฆ่าฟันจนบรรลัย           ฤๅหาใครค้ำชูกู้บรรลังก์ ฯ
+
+  (The above is a two-column text. If combining characters are handled
+  correctly, the lines of the second column should be aligned with the
+  | character above.)
+
+Ethiopian:
+
+  Proverbs in the Amharic language:
+
+  ሰማይ አይታረስ ንጉሥ አይከሰስ።
+  ብላ ካለኝ እንደአባቴ በቆመጠኝ።
+  ጌጥ ያለቤቱ ቁምጥና ነው።
+  ደሀ በሕልሙ ቅቤ ባይጠጣ ንጣት በገደለው።
+  የአፍ ወለምታ በቅቤ አይታሽም።
+  አይጥ በበላ ዳዋ ተመታ።
+  ሲተረጉሙ ይደረግሙ።
+  ቀስ በቀስ፥ ዕንቁላል በእግሩ ይሄዳል።
+  ድር ቢያብር አንበሳ ያስር።
+  ሰው እንደቤቱ እንጅ እንደ ጉረቤቱ አይተዳደርም።
+  እግዜር የከፈተውን ጉሮሮ ሳይዘጋው አይድርም።
+  የጎረቤት ሌባ፥ ቢያዩት ይስቅ ባያዩት ያጠልቅ።
+  ሥራ ከመፍታት ልጄን ላፋታት።
+  ዓባይ ማደሪያ የለው፥ ግንድ ይዞ ይዞራል።
+  የእስላም አገሩ መካ የአሞራ አገሩ ዋርካ።
+  ተንጋሎ ቢተፉ ተመልሶ ባፉ።
+  ወዳጅህ ማር ቢሆን ጨርስህ አትላሰው።
+  እግርህን በፍራሽህ ልክ ዘርጋ።
+
+Runes:
+
+  ᚻᛖ ᚳᚹᚫᚦ ᚦᚫᛏ ᚻᛖ ᛒᚢᛞᛖ ᚩᚾ ᚦᚫᛗ ᛚᚪᚾᛞᛖ ᚾᚩᚱᚦᚹᛖᚪᚱᛞᚢᛗ ᚹᛁᚦ ᚦᚪ ᚹᛖᛥᚫ
+
+  (Old English, which transcribed into Latin reads 'He cwaeth that he
+  bude thaem lande northweardum with tha Westsae.' and means 'He said
+  that he lived in the northern land near the Western Sea.')
+
+Braille:
+
+  ⡌⠁⠧⠑ ⠼⠁⠒  ⡍⠜⠇⠑⠹⠰⠎ ⡣⠕⠌
+
+  ⡍⠜⠇⠑⠹ ⠺⠁⠎ ⠙⠑⠁⠙⠒ ⠞⠕ ⠃⠑⠛⠔ ⠺⠊⠹⠲ ⡹⠻⠑ ⠊⠎ ⠝⠕ ⠙⠳⠃⠞
+  ⠱⠁⠞⠑⠧⠻ ⠁⠃⠳⠞ ⠹⠁⠞⠲ ⡹⠑ ⠗⠑⠛⠊⠌⠻ ⠕⠋ ⠙⠊⠎ ⠃⠥⠗⠊⠁⠇ ⠺⠁⠎
+  ⠎⠊⠛⠝⠫ ⠃⠹ ⠹⠑ ⠊⠇⠻⠛⠹⠍⠁⠝⠂ ⠹⠑ ⠊⠇⠻⠅⠂ ⠹⠑ ⠥⠝⠙⠻⠞⠁⠅⠻⠂
+  ⠁⠝⠙ ⠹⠑ ⠡⠊⠑⠋ ⠍⠳⠗⠝⠻⠲ ⡎⠊⠗⠕⠕⠛⠑ ⠎⠊⠛⠝⠫ ⠊⠞⠲ ⡁⠝⠙
+  ⡎⠊⠗⠕⠕⠛⠑⠰⠎ ⠝⠁⠍⠑ ⠺⠁⠎ ⠛⠕⠕⠙ ⠥⠏⠕⠝ ⠰⡡⠁⠝⠛⠑⠂ ⠋⠕⠗ ⠁⠝⠹⠹⠔⠛ ⠙⠑ 
+  ⠡⠕⠎⠑ ⠞⠕ ⠏⠥⠞ ⠙⠊⠎ ⠙⠁⠝⠙ ⠞⠕⠲
+
+  ⡕⠇⠙ ⡍⠜⠇⠑⠹ ⠺⠁⠎ ⠁⠎ ⠙⠑⠁⠙ ⠁⠎ ⠁ ⠙⠕⠕⠗⠤⠝⠁⠊⠇⠲
+
+  ⡍⠔⠙⠖ ⡊ ⠙⠕⠝⠰⠞ ⠍⠑⠁⠝ ⠞⠕ ⠎⠁⠹ ⠹⠁⠞ ⡊ ⠅⠝⠪⠂ ⠕⠋ ⠍⠹
+  ⠪⠝ ⠅⠝⠪⠇⠫⠛⠑⠂ ⠱⠁⠞ ⠹⠻⠑ ⠊⠎ ⠏⠜⠞⠊⠊⠥⠇⠜⠇⠹ ⠙⠑⠁⠙ ⠁⠃⠳⠞
+  ⠁ ⠙⠕⠕⠗⠤⠝⠁⠊⠇⠲ ⡊ ⠍⠊⠣⠞ ⠙⠁⠧⠑ ⠃⠑⠲ ⠔⠊⠇⠔⠫⠂ ⠍⠹⠎⠑⠇⠋⠂ ⠞⠕
+  ⠗⠑⠛⠜⠙ ⠁ ⠊⠕⠋⠋⠔⠤⠝⠁⠊⠇ ⠁⠎ ⠹⠑ ⠙⠑⠁⠙⠑⠌ ⠏⠊⠑⠊⠑ ⠕⠋ ⠊⠗⠕⠝⠍⠕⠝⠛⠻⠹ 
+  ⠔ ⠹⠑ ⠞⠗⠁⠙⠑⠲ ⡃⠥⠞ ⠹⠑ ⠺⠊⠎⠙⠕⠍ ⠕⠋ ⠳⠗ ⠁⠝⠊⠑⠌⠕⠗⠎ 
+  ⠊⠎ ⠔ ⠹⠑ ⠎⠊⠍⠊⠇⠑⠆ ⠁⠝⠙ ⠍⠹ ⠥⠝⠙⠁⠇⠇⠪⠫ ⠙⠁⠝⠙⠎
+  ⠩⠁⠇⠇ ⠝⠕⠞ ⠙⠊⠌⠥⠗⠃ ⠊⠞⠂ ⠕⠗ ⠹⠑ ⡊⠳⠝⠞⠗⠹⠰⠎ ⠙⠕⠝⠑ ⠋⠕⠗⠲ ⡹⠳
+  ⠺⠊⠇⠇ ⠹⠻⠑⠋⠕⠗⠑ ⠏⠻⠍⠊⠞ ⠍⠑ ⠞⠕ ⠗⠑⠏⠑⠁⠞⠂ ⠑⠍⠏⠙⠁⠞⠊⠊⠁⠇⠇⠹⠂ ⠹⠁⠞
+  ⡍⠜⠇⠑⠹ ⠺⠁⠎ ⠁⠎ ⠙⠑⠁⠙ ⠁⠎ ⠁ ⠙⠕⠕⠗⠤⠝⠁⠊⠇⠲
+
+  (The first couple of paragraphs of "A Christmas Carol" by Dickens)
+
+Compact font selection example text:
+
+  ABCDEFGHIJKLMNOPQRSTUVWXYZ /0123456789
+  abcdefghijklmnopqrstuvwxyz £©µÀÆÖÞßéöÿ
+  –—‘“”„†•…‰™œŠŸž€ ΑΒΓΔΩαβγδω АБВГДабвгд
+  ∀∂∈ℝ∧∪≡∞ ↑↗↨↻⇣ ┐┼╔╘░►☺♀ ﬁ�⑀₂ἠḂӥẄɐː⍎אԱა
+
+Greetings in various languages:
+
+  Hello world, Καλημέρα κόσμε, コンニチハ
+
+Box drawing alignment tests:                                          █
+                                                                      ▉
+  ╔══╦══╗  ┌──┬──┐  ╭──┬──╮  ╭──┬──╮  ┏━━┳━━┓  ┎┒┏┑   ╷  ╻ ┏┯┓ ┌┰┐    ▊ ╱╲╱╲╳╳╳
+  ║┌─╨─┐║  │╔═╧═╗│  │╒═╪═╕│  │╓─╁─╖│  ┃┌─╂─┐┃  ┗╃╄┙  ╶┼╴╺╋╸┠┼┨ ┝╋┥    ▋ ╲╱╲╱╳╳╳
+  ║│╲ ╱│║  │║   ║│  ││ │ ││  │║ ┃ ║│  ┃│ ╿ │┃  ┍╅╆┓   ╵  ╹ ┗┷┛ └┸┘    ▌ ╱╲╱╲╳╳╳
+  ╠╡ ╳ ╞╣  ├╢   ╟┤  ├┼─┼─┼┤  ├╫─╂─╫┤  ┣┿╾┼╼┿┫  ┕┛┖┚     ┌┄┄┐ ╎ ┏┅┅┓ ┋ ▍ ╲╱╲╱╳╳╳
+  ║│╱ ╲│║  │║   ║│  ││ │ ││  │║ ┃ ║│  ┃│ ╽ │┃  ░░▒▒▓▓██ ┊  ┆ ╎ ╏  ┇ ┋ ▎
+  ║└─╥─┘║  │╚═╤═╝│  │╘═╪═╛│  │╙─╀─╜│  ┃└─╂─┘┃  ░░▒▒▓▓██ ┊  ┆ ╎ ╏  ┇ ┋ ▏
+  ╚══╩══╝  └──┴──┘  ╰──┴──╯  ╰──┴──╯  ┗━━┻━━┛           └╌╌┘ ╎ ┗╍╍┛ ┋  ▁▂▃▄▅▆▇█
+
+`;
+		const decoded = String.utf8Decode(String.utf8Encode(ground_truth));
+		console.log(`    ${ground_truth === decoded ? "PASSED" : "FAILED"}`);
+	}
+
+	console.log("Uint8Array.binaryFrom/Uint8Array.binaryDump");
+	{
+		const {webcrypto:crypto} = require('node:crypto');
+		const test_results = {
+			bits:[], hex:[], b32hex:[], b62hex:[], base64:[], b64url:[]
+		} as {[key in Exclude<BinaryConversionType_String, 'utf8'>]:Array<boolean>};
+		const test_types = Object.keys(test_results) as (keyof typeof test_results)[];
+		
+		for(let i=0;i<100000;i++) {
+			const data_length = Math.floor(Math.random() * 120) + 1;
+			const data = crypto.getRandomValues(new Uint8Array(data_length));
+			
+			for(const type of test_types) {
+				const encoded = Uint8Array.binaryDump(data, type);
+				try {
+					const result = Uint8Array.binaryFrom(encoded, type);
+					test_results[type].push(Uint8Array.binaryCompare(data, result) === 0);
+				}
+				catch(e) {
+					console.log(encoded);
+					throw e;
+				}
+			}
+		}
+
+		for(const type of test_types) {
+			const result = test_results[type].reduce((p,c)=>p&&c, true);
+			console.log(`    [${type}] ${result?'PASSED':'FAILED'}`);
+		}
+	}
+}
