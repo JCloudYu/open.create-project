@@ -13,6 +13,7 @@ declare global {
 
 	interface EventTarget {
 		on<EventType extends Event=Event>(event:string, callback:EventBusEventListener<EventType>):symbol;
+		once<EventType extends Event=Event>(event:string, callback:EventBusEventListener<EventType>):symbol;
 		off(symbol:symbol):void;
 		off(event:string, callback:{(e:Event):void}):void;
 		off(arg1:symbol|string, arg2?:{(e:Event):void}|undefined):void;
@@ -76,6 +77,20 @@ declare global {
 				HandlerRef.set(handler_symbol, {event, func:callback});
 				
 				this.addEventListener(event, callback);
+				return handler_symbol;
+			}
+		},
+		once: {
+			configurable:true, enumerable:false, writable:true,
+			value: function(event:string, callback:EventBusEventListener):symbol {
+				const handler_symbol = Symbol(handler_count++);
+				HandlerRef.set(handler_symbol, {event, func:callback});
+				
+				
+				this.addEventListener(event, (e:Event)=>{
+					HandlerRef.delete(handler_symbol);
+					callback(e);
+				});
 				return handler_symbol;
 			}
 		},
@@ -189,9 +204,21 @@ interface RegisterOptions { tagName:string; view?:string; };
 export class ElmJS {
 	static get HTMLModule() { return HTMLModule }
 	
-	static createElement<ElementType extends Element=Element>(html:string, resolve_exports:boolean=true):ElementType|null {
-		const template = document.createElement('template');
-		template.innerHTML = html.trim();
+	static createElement<ElementType extends Element=Element>(html:string|HTMLTemplateElement, resolve_exports:boolean=true):ElementType|null {
+		let template:HTMLTemplateElement;
+
+		if ( typeof html !== "string" ) {
+			if ( html.tagName !== "TEMPLATE" ) {
+				throw new TypeError("Given element source must be a html string or a HTMLTemplateElement");
+			}
+
+			template = html;
+		}
+		else {
+			template = document.createElement('template');
+			template.innerHTML = html.trim();
+		}
+
 		if ( template.content.children.length > 1 ) {
 			throw new RangeError("Given html string must contains only one element!");
 		}
@@ -203,12 +230,23 @@ export class ElmJS {
 
 		return resolve_exports ? this.resolveExports(element) : element;
 	}
-	static createElements(html:string, resolve_exports:boolean=true):DocumentFragment {
-		const template = document.createElement('template');
-		template.innerHTML = html.trim();
+	static createElements(html:string|HTMLTemplateElement, resolve_exports:boolean=true):DocumentFragment {
+		let template:HTMLTemplateElement;
+		if ( typeof html !== "string" ) {
+			if ( html.tagName !== "TEMPLATE" ) {
+				throw new TypeError("Given element source must be a html string or a HTMLTemplateElement");
+			}
+
+			template = html;
+		}
+		else {
+			template = document.createElement('template');
+			template.innerHTML = html.trim();
+		}
+
 		return resolve_exports ? template.content : this.resolveExports(template.content);
 	}
-	static createElementsAtAnchor(anchor_selector:string, html:string, options:{resolveExports?:boolean, keepAnchor?:boolean}={}):void {
+	static createElementsAtAnchor(anchor_selector:string, html:string|HTMLTemplateElement, options:{resolveExports?:boolean, keepAnchor?:boolean}={}):void {
 		const resolve_exports = options.resolveExports === undefined ? true : !!options.resolveExports;
 		const keep_anchor = options.keepAnchor === undefined ? false : !!options.keepAnchor;
 

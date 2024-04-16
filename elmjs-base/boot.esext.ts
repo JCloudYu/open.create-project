@@ -743,7 +743,7 @@ declare global {
 				}
 				else
 				if ( ArrayBuffer.isView(c) ) {
-					return new Uint8Array(c.buffer);
+					return new Uint8Array(c.buffer, c.byteOffset, c.byteLength);
 				}
 				else {
 					return new Uint8Array(0);
@@ -772,7 +772,7 @@ declare global {
 			}
 		}
 		if (ArrayBuffer.isView(content)) {
-			return new Uint8Array(content.buffer);
+			return new Uint8Array(content.buffer, content.byteOffset, content.byteLength);
 		}
 		if (content instanceof ArrayBuffer) {
 			return new Uint8Array(content);
