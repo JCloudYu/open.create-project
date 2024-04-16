@@ -212,7 +212,7 @@ export class ElmJS {
 				throw new TypeError("Given element source must be a html string or a HTMLTemplateElement");
 			}
 
-			template = html;
+			template = html.cloneNode(true) as HTMLTemplateElement;
 		}
 		else {
 			template = document.createElement('template');
@@ -237,7 +237,7 @@ export class ElmJS {
 				throw new TypeError("Given element source must be a html string or a HTMLTemplateElement");
 			}
 
-			template = html;
+			template = html.cloneNode(true) as HTMLTemplateElement;
 		}
 		else {
 			template = document.createElement('template');
