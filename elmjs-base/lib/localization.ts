@@ -71,13 +71,13 @@ export class Localization {
 export function BuildTemplate(strings:TemplateStringsArray, ...var_names:string[]):LocaleTemplate {
 	return function(data?:string|{[vname:string]:any}):string {
 		const data_map = (( Object.prototype.toString.call(data) !== "[object Object]" ) ? data = {'%s':data||'' } : data) as {[key:string]:any};
-		const vars = Array.from(var_names).reverse();
-		const strs = Array.from(strings).reverse();
-
+		const vars = Array.from(var_names);
+		const strs = Array.from(strings);
+		
 		let result = strs.shift()!;
 		for(const vname of vars) {
-			const string = strs.pop()!;
-			result += string + ((data_map[vname]||vname).toString());
+			const string = strs.shift()!;
+			result += ((data_map[vname]||vname).toString()) + string;
 		}
 
 		return result;
