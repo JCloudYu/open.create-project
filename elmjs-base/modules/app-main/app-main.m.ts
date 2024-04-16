@@ -1,5 +1,5 @@
 import {ElmJS} from "/lib/elmjs.js";
-import {$EventBus, $Router, $Route} from "/runtime.js";
+import {$EventBus, $Router, $Route, $App} from "/runtime.js";
 
 export class AppMain extends ElmJS.HTMLModule {
 	#view_container:HTMLElement;
@@ -53,3 +53,31 @@ export class AppMain extends ElmJS.HTMLModule {
 }
 
 ElmJS.registerModule(AppMain, {tagName:'app-main', extends:'div'});
+
+
+
+
+
+
+// Register app apis
+declare global {
+	interface AppData {
+		alert(message:string, title?:string):Promise<void>;
+		confirm(message:string, title?:string):Promise<boolean>;
+	}
+}
+
+Object.defineProperties($App, {
+	alert: {
+		configurable:false, writable:false, enumerable:true,
+		value:async(message:string, title?:string):Promise<void>=>{
+			return alert(message);
+		}
+	},
+	confirm: {
+		configurable:false, writable:false, enumerable:true,
+		value:async(message:string, title?:string):Promise<boolean>=>{
+			return confirm(message);
+		}
+	}
+});

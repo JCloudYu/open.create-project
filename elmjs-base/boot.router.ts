@@ -2,7 +2,7 @@ import {$EventBus, $Route} from "/runtime.js";
 
 
 
-export async function init(view_manager:string|EventTarget) {
+export async function init() {
 	document.body.on('click', (e:Event)=>{
 		const target = e.target as HTMLElement;
 		if ( !target ) return;
