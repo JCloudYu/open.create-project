@@ -77,7 +77,8 @@ export function BuildTemplate(strings:TemplateStringsArray, ...var_names:string[
 		let result = strs.shift()!;
 		for(const vname of vars) {
 			const string = strs.shift()!;
-			result += ((data_map[vname]||vname).toString()) + string;
+			const value = typeof data_map[vname] === "undefined" ? vname : data_map[vname];
+			result += '' + value + string;
 		}
 
 		return result;
