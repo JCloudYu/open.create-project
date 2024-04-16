@@ -42,6 +42,7 @@ if ( exit_code ) process.exit(exit_code);
 
 
 
+// Load all scss/sass file paths
 echo("Parsing scss/sass files...");
 let css_files = [];
 css_files = css_files.concat((await $`find . ! -path "./static/*" ! -path "./_temp/*" ! -path "./_template/*" ! -path "./_build/*" ! -path "./node_modules/*" -name "*.scss"`.quiet()).stdout.split('\n'));
@@ -50,6 +51,7 @@ css_files = css_files.filter((t)=>t.trim()!=="");
 
 
 
+// Load and store module view file paths
 echo("Resolving module view files...");
 const module_view_map = {};
 const view_files = (await $`find . ! -path "./public/*" ! -path "./_build/*" ! -path "./node_modules/*" -name "*.v.html"`.quiet()).stdout.trim().split('\n');
@@ -69,6 +71,7 @@ for(const candidate of view_files) {
 
 
 
+// Load and store module paths
 echo("Resolving module scripts...");
 const module_script_paths = new Set();
 const scripts = (await $`find . ! -path "./public/*" ! -path "./_build/*" ! -path "./node_modules/*" -name "*.m.ts"`.quiet()).stdout.trim().split('\n');
@@ -81,12 +84,15 @@ for(const candidate of scripts) {
 
 
 
+
+
+// Generate style.css
 echo("Generating style...");
 fs.writeFileSync('./_temp/style.scss', css_files.sort((a,b)=>a>b?1:(a<b?-1:0)).map((f)=>`@use "${path.resolve(__dirname, f)}" as *;`).join("\n"), {flag:'w'});
 exit_code = (await $`sass --no-source-map ./_temp/style.scss ./_build/style.css`).exitCode;
 if ( exit_code ) process.exit(exit_code);
 
-
+// Calc style hash
 const style_hash = await (new Promise((res, rej)=>{
 	const hash = crypto.createHash('sha1');
 	
@@ -100,54 +106,16 @@ if ( style_hash instanceof Error ) {
 	process.exit(1);
 }
 
-const stylesheet_path = `style.${style_hash.substring(0, 10)}.css`;
-exit_code = (await $`mv ./_build/style.css ./_build/${stylesheet_path}`).exitCode;
-if ( exit_code ) process.exit(exit_code);
 
 
 
 
-
+// Generate boot script and calc file hash
 echo("Generating script...");
 exit_code = (await $`tsc`).exitCode;
 if ( exit_code ) process.exit(exit_code);
 
-
-const script_hash = await (new Promise((res, rej)=>{
-	const hash = crypto.createHash('sha1');
-	
-	fs.createReadStream('./_build/boot.js')
-	.on('data', (c)=>hash.update(c))
-	.on('error', rej)
-	.on('end', ()=>res(hash.digest('hex')));
-})).catch(e=>e);
-if ( script_hash instanceof Error ) {
-	console.error(script_hash.message);
-	process.exit(1);
-}
-
-const bootscript_path = `boot.${script_hash.substring(0, 10)}.js`;
-exit_code = (await $`mv ./_build/boot.js ./_build/${bootscript_path}`).exitCode;
-if ( exit_code ) process.exit(exit_code);
-
-
-const DOM = new JSDOM(fs.readFileSync('./index.html').toString('utf8'), {lowerCaseTagName:true});
-const html = DOM.window;
-
-const boot_css = html.document.createElement('link');
-boot_css.setAttribute('rel', 'stylesheet');
-boot_css.setAttribute('type', 'text/css');
-boot_css.setAttribute('href', `./${stylesheet_path}`);
-html.document.head.appendChild(boot_css);
-
-html.document.body.querySelector('#app-bootstrap-code').setAttribute('data-bootstrap', `./${bootscript_path}`);
-
-
-
-echo("Generating runtime html...");
-fs.writeFileSync('./_build/index.html', DOM.serialize());
-
-
+// Resolve module view contents
 echo("Dumpping module view contents...");
 const verf = new JSDOM();
 const verf_body = verf.window.document.body;
@@ -182,7 +150,32 @@ if ( errors.length > 0 ) {
 	process.exit(1);
 }
 
+// Generate dynamic info
+const module_dep = [ "require", "exports", ...module_script_paths ];
+fs.appendFileSync(`./_build/boot.js`, `
+requirejs.undef('boot.module-env');
+define("boot.module-env", ${JSON.stringify(module_dep)}, function (require, exports) {
+	"use strict";
+	Object.assign(exports, ${JSON.stringify(view_ctnts)});
+});
+`);
 
+// Calc script hash
+const script_hash = await (new Promise((res, rej)=>{
+	const hash = crypto.createHash('sha1');
+	
+	fs.createReadStream('./_build/boot.js')
+	.on('data', (c)=>hash.update(c))
+	.on('error', rej)
+	.on('end', ()=>res(hash.digest('hex')));
+})).catch(e=>e);
+if ( script_hash instanceof Error ) {
+	console.error(script_hash.message);
+	process.exit(1);
+}
+
+
+// Calculate all hashes
 const batch_hash = crypto.createHash('sha1').update(style_hash, 'hex').update(script_hash, 'hex').digest('hex');
 const process_info = {
 	digest: {
@@ -192,19 +185,52 @@ const process_info = {
 	}
 };
 
-const module_dep = [ "require", "exports", ...module_script_paths ];
-fs.appendFileSync(`./_build/${bootscript_path}`, `
-requirejs.undef('boot.module-env');
+// Write final content hash info
+fs.appendFileSync(`./_build/boot.js`, `
 requirejs.undef('boot.process');
-define("boot.module-env", ${JSON.stringify(module_dep)}, function (require, exports) {
-	"use strict";
-	Object.assign(exports, ${JSON.stringify(view_ctnts)});
-});
 define("boot.process", [ "require", "exports" ], function(require, exports) {
 	"use strict";
 	Object.assign(exports, ${JSON.stringify(process_info)})
 });
 `);
+
+
+
+
+// Append hashes to style.js
+const stylesheet_path = `style.${batch_hash.substring(0, 10)}.css`;
+exit_code = (await $`mv ./_build/style.css ./_build/${stylesheet_path}`).exitCode;
+if ( exit_code ) process.exit(exit_code);
+
+// Append hashes to boot.js
+const bootscript_path = `boot.${batch_hash.substring(0, 10)}.js`;
+exit_code = (await $`mv ./_build/boot.js ./_build/${bootscript_path}`).exitCode;
+if ( exit_code ) process.exit(exit_code);
+
+
+
+
+
+
+
+
+
+
+
+
+// Generate index.html and fill dynamic paths
+echo("Generating runtime html...");
+const DOM = new JSDOM(fs.readFileSync('./index.html').toString('utf8'), {lowerCaseTagName:true});
+const html = DOM.window;
+
+const boot_css = html.document.createElement('link');
+boot_css.setAttribute('rel', 'stylesheet');
+boot_css.setAttribute('type', 'text/css');
+boot_css.setAttribute('href', `./${stylesheet_path}`);
+html.document.head.appendChild(boot_css);
+
+html.document.body.querySelector('#app-bootstrap-code').setAttribute('data-bootstrap', `./${bootscript_path}`);
+fs.writeFileSync('./_build/index.html', DOM.serialize());
 
 
 
