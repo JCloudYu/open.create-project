@@ -19,7 +19,7 @@ export class AppMain extends ElmJS.HTMLModule {
 		this.#view_container.innerHTML = '';
 
 		$Route.permData = {"beta-testing":''};
-		$Route.replace(window.location.pathname);
+		$Route.replace(`${window.location.pathname}${window.location.search}${window.location.hash}`);
 
 		setInterval(()=>$EventBus.emit('tick:second'), 1_000);
 	}
