@@ -1,5 +1,5 @@
 declare global {
-	interface ExportedElementMap {[key:string]:HTMLElement}
+	interface ExportedElementMap<ElementType=HTMLElement> {[key:string]:ElementType}
 
 	interface Element {
 		exportedElements:ExportedElementMap;
