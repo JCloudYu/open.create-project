@@ -3,12 +3,12 @@ declare global {
 
 	interface Element {
 		exportedElements:ExportedElementMap;
-		getExportedElement<ElementType=Element>(id:string):ElementType|null;
+		getExportedElement<ElementType=HTMLElement>(id:string):ElementType|null;
 	}
 
 	interface DocumentFragment {
 		exportedElements:ExportedElementMap;
-		getExportedElement<ElementType=Element>(id:string):ElementType|null;
+		getExportedElement<ElementType=HTMLElement>(id:string):ElementType|null;
 	}
 
 	interface EventTarget {
@@ -41,7 +41,7 @@ declare global {
 	
 	Object.defineProperty(Element.prototype, 'getExportedElement', {
 		configurable:true, enumerable:false, writable:true,
-		value: function<ElementType=Element>(id:string):ElementType|null {
+		value: function<ElementType=HTMLElement>(id:string):ElementType|null {
 			const element = this.exportedElements[id];
 			return element ? (element as ElementType) : null;
 		}
@@ -61,7 +61,7 @@ declare global {
 	
 	Object.defineProperty(DocumentFragment.prototype, 'getExportedElement', {
 		configurable:true, enumerable:false, writable:true,
-		value: function<ElementType=Element>(id:string):ElementType|null {
+		value: function<ElementType=HTMLElement>(id:string):ElementType|null {
 			const element = this.exportedElements[id];
 			return element ? (element as ElementType) : null;
 		}
@@ -204,7 +204,7 @@ interface RegisterOptions { tagName:string; view?:string; };
 export class ElmJS {
 	static get HTMLModule() { return HTMLModule }
 	
-	static createElement<ElementType extends Element=Element>(html:string|HTMLTemplateElement, resolve_exports:boolean=true):ElementType|null {
+	static createElement<ElementType extends Element=HTMLElement>(html:string|HTMLTemplateElement, resolve_exports:boolean=true):ElementType|null {
 		let template:HTMLTemplateElement;
 
 		if ( typeof html !== "string" ) {
@@ -266,7 +266,7 @@ export class ElmJS {
 		}
 	}
 
-	static resolveExports<ElementType extends Element=Element>(root_element:ElementType, force_subcontext?:boolean):ElementType;
+	static resolveExports<ElementType extends Element=HTMLElement>(root_element:ElementType, force_subcontext?:boolean):ElementType;
 	static resolveExports(root_element:DocumentFragment, force_subcontext?:boolean):DocumentFragment;
 	static resolveExports(root_element:Element|DocumentFragment, force_subcontext:boolean=false):Element|DocumentFragment {
 		if ( !(root_element instanceof Element) && !(root_element instanceof DocumentFragment) ) {
