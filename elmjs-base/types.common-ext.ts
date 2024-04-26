@@ -22,6 +22,9 @@ declare type epoch_milli	= number;
 declare type num_str		= string;
 declare type json_str		= string;
 declare type uniqid			= string;
+declare type ipv4			= string;
+declare type ipv6			= string;
+declare type iso8601_ts		= string;
 
 declare type bigint_str		= string;
 
