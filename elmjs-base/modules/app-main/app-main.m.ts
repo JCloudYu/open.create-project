@@ -44,7 +44,7 @@ export class AppMain extends ElmJS.HTMLModule {
 			if ( view === dest ) continue;
 			
 			view.remove();
-			dest.emit('state:hide', false);
+			view.emit('state:hide', false);
 		}
 
 		this.#view_container.append(dest);
