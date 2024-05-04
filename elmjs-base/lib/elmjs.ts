@@ -280,7 +280,7 @@ export class ElmJS {
 		return root_element;
 	}
 
-	static registerModule(class_inst:typeof HTMLModule, options:RegisterOptions&ElementDefinitionOptions):typeof HTMLModule {
+	static registerModule<InstType extends CustomElementConstructor = typeof HTMLModule>(class_inst:InstType, options:RegisterOptions&ElementDefinitionOptions):InstType {
 		const extended = (typeof options.extends === "undefined") ? {extends:options.extends} : undefined;
 		if ( options.view ) {
 			this.registerModuleView(options.tagName.toUpperCase(), options.view);
@@ -301,6 +301,10 @@ export class ElmJS {
 		for(const entry of Object.entries(arg1 as Record<string, string>)) {
 			ModuleViews[entry[0].toUpperCase()] = `${entry[1]}`;
 		}
+	}
+
+	static getModuleView(tagName:string):string|undefined {
+		return ModuleViews[`${tagName}`.toUpperCase()]||undefined;
 	}
 }
 
