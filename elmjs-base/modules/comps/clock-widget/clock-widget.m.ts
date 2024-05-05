@@ -43,4 +43,4 @@ export class ClockWidget extends ElmJS.HTMLModule {
 	}
 }
 
-ElmJS.registerModule(ClockWidget, {tagName:'clock-widget', extends:'div'});
+ElmJS.registerModule(ClockWidget, {tagName:'clock-widget'});

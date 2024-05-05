@@ -56,4 +56,4 @@ class ClockView extends ElmJS.HTMLModule {
 	}
 }
 
-ElmJS.registerModule(ClockView, {tagName:'clock-view', extends:'div'});
+ElmJS.registerModule(ClockView, {tagName:'clock-view'});

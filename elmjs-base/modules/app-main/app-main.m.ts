@@ -52,7 +52,7 @@ export class AppMain extends ElmJS.HTMLModule {
 	}
 }
 
-ElmJS.registerModule(AppMain, {tagName:'app-main', extends:'div'});
+ElmJS.registerModule(AppMain, {tagName:'app-main'});
 
 
 

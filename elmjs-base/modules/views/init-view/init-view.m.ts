@@ -9,4 +9,4 @@ export class InitView extends ElmJS.HTMLModule {
 	}
 }
 
-ElmJS.registerModule(InitView, {tagName:'init-view', extends:'div'});
+ElmJS.registerModule(InitView, {tagName:'init-view'});

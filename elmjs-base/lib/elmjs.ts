@@ -140,7 +140,6 @@ class HTMLModule extends HTMLElement {
 
 	constructor() {
 		super();
-		
 		ElmJS.decorateModuleView(this, this.tagName.toUpperCase());
 	}
 	
@@ -255,13 +254,25 @@ export class ElmJS {
 		return root_element;
 	}
 
-	static registerModule<InstType extends CustomElementConstructor = typeof HTMLModule>(class_inst:InstType, options:RegisterOptions&ElementDefinitionOptions):InstType {
-		const extended = (typeof options.extends === "undefined") ? {extends:options.extends} : undefined;
+	static registerModule<InstType extends CustomElementConstructor = typeof HTMLModule>(class_inst:InstType, options:RegisterOptions):InstType {
 		if ( options.view ) {
 			this.registerModuleView(options.tagName.toUpperCase(), options.view);
 		}
-		window.customElements.define(options.tagName, class_inst, extended);
 
+		window.customElements.define(options.tagName, class_inst);
+		return class_inst;
+	}
+
+	static registerBuiltInModule<InstType extends CustomElementConstructor = typeof HTMLDivElement>(class_inst:InstType, options:RegisterOptions&Required<ElementDefinitionOptions>) {
+		if ( !options.extends ) {
+			throw new TypeError("extends option is required to initialize a built-in moudle!");
+		}
+		
+		if ( options.view ) {
+			this.registerModuleView(options.tagName.toUpperCase(), options.view);
+		}
+
+		window.customElements.define(options.tagName, class_inst, {extends:options.extends});
 		return class_inst;
 	}
 
