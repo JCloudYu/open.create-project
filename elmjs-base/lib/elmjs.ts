@@ -141,32 +141,7 @@ class HTMLModule extends HTMLElement {
 	constructor() {
 		super();
 		
-		const view_key = this.tagName.toUpperCase()
-		const view_html = ModuleViews[view_key];
-		if ( view_html !== undefined ) {
-			const temp_elm = document.createElement('template');
-			temp_elm.innerHTML = view_html;
-			if ( temp_elm.content.children.length > 0 ) {
-				const module_elm = temp_elm.content.children[0] as HTMLElement;
-				const new_elm = document.createElement('template');
-				new_elm.innerHTML = module_elm.innerHTML;
-
-				const classes:string[] = [];
-				for(const cls_name of this.classList) classes.push(cls_name);
-
-				const styles:{[k:string]:string} = {};
-				for(let i=0; i<this.style.length; i++) {
-					const name = this.style[i];
-					styles[name] = this.style.getPropertyValue(name);
-				}
-
-				for(const attr of module_elm.attributes) this.setAttribute(attr.name, attr.value);
-				for(const name of classes) this.classList.add(name);
-				for(const entry of Object.entries(styles)) this.style.setProperty(entry[0], entry[1]);
-
-				this.appendChild(new_elm.content)
-			}
-		}
+		ElmJS.decorateModuleView(this, this.tagName.toUpperCase());
 	}
 	
 	connectedCallback() {
@@ -305,6 +280,35 @@ export class ElmJS {
 
 	static getModuleView(tagName:string):string|undefined {
 		return ModuleViews[`${tagName}`.toUpperCase()]||undefined;
+	}
+
+	static decorateModuleView(elm:HTMLElement, tagName:string):boolean {
+		const view_html = ModuleViews[`${tagName}`.toUpperCase()]||undefined;
+		if ( !view_html ) return false;
+		
+		const temp_elm = document.createElement('template');
+		temp_elm.innerHTML = view_html;
+		if ( temp_elm.content.children.length <= 0 ) return false;
+
+		const module_elm = temp_elm.content.children[0] as HTMLElement;
+		const new_elm = document.createElement('template');
+		new_elm.innerHTML = module_elm.innerHTML;
+
+		const classes:string[] = [];
+		for(const cls_name of elm.classList) classes.push(cls_name);
+
+		const styles:{[k:string]:string} = {};
+		for(let i=0; i<elm.style.length; i++) {
+			const name = elm.style[i];
+			styles[name] = elm.style.getPropertyValue(name);
+		}
+
+		for(const attr of module_elm.attributes) elm.setAttribute(attr.name, attr.value);
+		for(const name of classes) elm.classList.add(name);
+		for(const entry of Object.entries(styles)) elm.style.setProperty(entry[0], entry[1]);
+
+		elm.appendChild(new_elm.content);
+		return true;
 	}
 }
 
