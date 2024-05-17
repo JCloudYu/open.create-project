@@ -4,14 +4,17 @@ import crypto from "node:crypto";
 import path from "node:path";
 import Clipargs from "clipargs";
 import {JSDOM} from "jsdom";
+import {minify} from 'terser';
 
 /**
  *	@type {{
+ *		obfuscate?:boolean;
  * 		help?:boolean;
  * 		compile?:boolean;
  *	}};
  **/
 const argv = Clipargs
+.bool('obfuscate', '-ob', '--obfuscate')
 .bool('compile', '-c', '--compile')
 .bool('help', '-h', '--help')
 .parse(process.argv.slice(2));
@@ -204,7 +207,14 @@ if ( exit_code ) process.exit(exit_code);
 
 // Append hashes to boot.js
 const bootscript_path = `boot.${batch_hash.substring(0, 10)}.js`;
-exit_code = (await $`mv ./_build/boot.js ./_build/${bootscript_path}`).exitCode;
+if ( argv.obfuscate ) {
+	const out = await minify(fs.readFileSync('./_build/boot.js').toString('utf8'), {compress:true, mangle:true});
+	await fs.writeFile(`./_build/${bootscript_path}`, out.code);
+	await $`rm -f ./_build/boot.js`;
+}
+else {
+	exit_code = (await $`mv ./_build/boot.js ./_build/${bootscript_path}`).exitCode;
+}
 if ( exit_code ) process.exit(exit_code);
 
 
