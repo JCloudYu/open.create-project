@@ -15,7 +15,7 @@ import {minify} from 'terser';
  **/
 const argv = Clipargs
 .bool('obfuscate', '-ob', '--obfuscate')
-.bool('compile', '-c', '--compile')
+.bool('fullpack', '-p', '--pack')
 .bool('help', '-h', '--help')
 .parse(process.argv.slice(2));
 
@@ -25,7 +25,8 @@ if ( argv.help ) {
 	console.log('' +
 `Options:
     -h, --help        Print command line usage
-    -c, --compile     Build project without compiling resources
+	-p, --pack        Whether to copy all the static resources
+	-ob, --obfuscate  Whether to obfuscate output boot.js
 `);
 	process.exit(0);
 }
@@ -205,7 +206,7 @@ const stylesheet_path = `style.${batch_hash.substring(0, 10)}.css`;
 exit_code = (await $`mv ./_build/style.css ./_build/${stylesheet_path}`).exitCode;
 if ( exit_code ) process.exit(exit_code);
 
-// Append hashes to boot.js
+// Add versionsed info to boot.js and perform obfuscation
 const bootscript_path = `boot.${batch_hash.substring(0, 10)}.js`;
 if ( argv.obfuscate ) {
 	const out = await minify(fs.readFileSync('./_build/boot.js').toString('utf8'), {compress:true, mangle:true});
@@ -252,7 +253,7 @@ await $`rm -rf ./_temp`;
 
 
 
-if ( !argv.compile ) {
+if ( argv.fullpack ) {
 	echo("Copy public resources...");
 	await $`cp -r ./static/* ./_build`;
 }
