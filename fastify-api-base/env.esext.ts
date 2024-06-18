@@ -815,6 +815,20 @@ declare global {
 	});
 })();
 
+
+// Promise
+declare global {
+	interface PromiseConstructor {
+		wrap<ReturnType=any>(callable:{(...args:any):ReturnType|Promise<ReturnType>}, ...args:any[]):Promise<ReturnType>;
+	}
+}
+Object.defineProperty(Promise, 'wrap', {
+	configurable: true, enumerable: false, writable: true,
+	value:async <ReturnType=any>(callable:{(...args:any):ReturnType|Promise<ReturnType>}, ...args:any[]):Promise<ReturnType>=>{
+		return await callable(...args);
+	}
+});
+
 export {};
 
 
