@@ -28,7 +28,8 @@ export class AppMain extends ElmJS.HTMLModule {
 		const path = $Route.route.path;
 		const result = $Router.locate<{view:HTMLElement}>(path);
 		if ( !result ) {
-			throw new Error(`No valid handler for route: ${path}!`);
+			$Route.replace('/error/404');
+			return;
 		}
 
 		

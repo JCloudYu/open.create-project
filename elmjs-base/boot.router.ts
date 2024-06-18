@@ -7,14 +7,29 @@ export async function init() {
 		const target = e.target as HTMLElement;
 		if ( !target ) return;
 
-		if ( target.matches('[elm-route], [elm-route] *') ) {
+		if ( target.matches('[elm-route], [elm-route] *, [elm-route-replace], [elm-route-replace]') ) {
 			e.preventDefault(); e.stopPropagation();
 
-			const elm = target.closest<HTMLElement>('[elm-route]')!;
-			const route_path = elm.getAttribute('elm-route');
+			let replace = false, route_path:string|null = '', elm = target.closest<HTMLElement>('[elm-route]')!;
+			if ( elm ) {
+				route_path = elm.getAttribute('elm-route');
+			}
+			else {
+				elm = target.closest<HTMLElement>('[elm-route-replace]')!;
+				route_path = elm.getAttribute('elm-route-replace');
+				replace = true;
+			}
 			if ( !route_path ) return;
 
-			setTimeout(()=>$Route.push(route_path, {}));
+			
+			setTimeout(()=>{
+				if (!replace) {
+					$Route.push(route_path, {});
+				}
+				else {
+					$Route.replace(route_path, {});
+				}
+			});
 			return;
 		}
 		

@@ -4,3 +4,4 @@ Thumbs.db
 _build
 _temp
 node_dmoules
+config-*.json

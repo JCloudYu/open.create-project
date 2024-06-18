@@ -17,6 +17,7 @@ const argv = Clipargs
 .bool('obfuscate', '-ob', '--obfuscate')
 .bool('fullpack', '-p', '--pack')
 .bool('help', '-h', '--help')
+.bool('env', '-E', '--env')
 .parse(process.argv.slice(2));
 
 
@@ -27,6 +28,7 @@ if ( argv.help ) {
     -h, --help        Print command line usage
 	-p, --pack        Whether to copy all the static resources
 	-ob, --obfuscate  Whether to obfuscate output boot.js
+	-E, --env		  Set environment ( default: prod )
 `);
 	process.exit(0);
 }
@@ -86,6 +88,15 @@ for(const candidate of scripts) {
 	module_script_paths.add(module_path.substring(0, module_path.length - 3));
 }
 
+
+
+const config_name = `config-${argv.env||'prod'}.json`;
+const result = await fs.readFile(`./${config_name}`).catch(e=>e);
+if ( result instanceof Error ) {
+	console.error(`Unable to read configuration file ${config_name}`);
+	process.exit(1);
+}
+const env_config = JSON.parse(result.toString('utf8'));
 
 
 
@@ -186,7 +197,8 @@ const process_info = {
 		style:script_hash.substring(0, 10),
 		script:script_hash.substring(0, 10),
 		build:batch_hash.substring(0, 10)
-	}
+	},
+	config:env_config
 };
 
 // Write final content hash info
@@ -239,6 +251,13 @@ boot_css.setAttribute('rel', 'stylesheet');
 boot_css.setAttribute('type', 'text/css');
 boot_css.setAttribute('href', `./${stylesheet_path}`);
 html.document.head.appendChild(boot_css);
+let base_elm = html.document.head.querySelector('base');
+if ( !base_elm ) {
+	base_elm = html.document.createElement('base');
+	html.document.head.appendChild(base_elm);
+}
+base_elm.href = env_config.route_prefix||'./';
+
 
 html.document.body.querySelector('#app-bootstrap-code').setAttribute('data-bootstrap', `./${bootscript_path}`);
 fs.writeFileSync('./_build/index.html', DOM.serialize());
