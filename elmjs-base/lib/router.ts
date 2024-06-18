@@ -105,6 +105,11 @@ class RouteCtrl extends EventTarget {
 export const Route = new RouteCtrl();
 
 
+window.addEventListener('popstate', (e)=>{
+	Route.dispatchEvent(Object.assign(new Event('changed', {bubbles:false}), {op:'poped'}));
+});
+
+
 // Test script
 if ( typeof require !== "undefined" && typeof module !== "undefined" && Object(require) === require && require.main === module ) {
 	(()=>{
