@@ -7,10 +7,30 @@ interface LocateResult<MetaType=any> {
 export class Router {
 	#route:RouteInfo[] = [];
 	#route_plain:RouteInfo[] = [];
+	static #prefix:string = '';
 
 	static init():Router { return new Router() }
 
+	static get route_prefix() {
+		return this.#prefix;
+	}
+
+	static set route_prefix(prefix:string) {
+		this.#prefix = '' + prefix;
+	}
+
+	static resolve(route:string) {
+		const route_prefix = this.route_prefix;
+		if ( route_prefix && !route.startsWith(route_prefix) ) {
+			route = `${route_prefix}${route}`;
+		}
+
+		return route;
+	}
+
 	route(route:string, meta:any):this {
+		route = Router.resolve(route);
+		
 		const route_result = match(route, {decode:decodeURIComponent});
 		const route_ctnt:RouteInfo = {
 			route_path: route,
@@ -28,6 +48,8 @@ export class Router {
 	}
 
 	locate<MetaType=any>(path:string):LocateResult<MetaType>|null {
+		path = Router.resolve(path);
+
 		for(const route of this.#route_plain) {
 			const match_result = route.matcher(path);
 			if ( match_result ) {
@@ -79,7 +101,9 @@ class RouteCtrl extends EventTarget {
 		for(const key in this.#cached_data) {
 			parsed_url.searchParams.set(key, `${this.#cached_data[key]||''}`);
 		}
-		history.pushState(state, '', `${parsed_url.pathname}${parsed_url.search}${parsed_url.hash}`);
+
+		const route_path = Router.resolve(parsed_url.pathname);
+		history.pushState(state, '', `${route_path}${parsed_url.search}${parsed_url.hash}`);
 		this.dispatchEvent(Object.assign(new Event('changed', {bubbles:false}), {op:'pushed'}));
 	}
 	replace(url:string, state?:any):void {
@@ -88,7 +112,8 @@ class RouteCtrl extends EventTarget {
 			parsed_url.searchParams.set(key, `${this.#cached_data[key]||''}`);
 		}
 
-		history.replaceState(state, '', `${parsed_url.pathname}${parsed_url.search}${parsed_url.hash}`);
+		const route_path = Router.resolve(parsed_url.pathname);
+		history.replaceState(state, '', `${route_path}${parsed_url.search}${parsed_url.hash}`);
 		this.dispatchEvent(Object.assign(new Event('changed', {bubbles:false}), {op:'replaced'}));
 	}
 	pop(delta:number=1) {
