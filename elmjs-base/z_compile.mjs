@@ -178,6 +178,7 @@ define("boot.module-env", ${JSON.stringify(module_dep)}, function (require, expo
 // Calc script hash
 const script_hash = await (new Promise((res, rej)=>{
 	const hash = crypto.createHash('sha1');
+	hash.update(JSON.stringify({config:env_config}));
 	
 	fs.createReadStream('./_build/boot.js')
 	.on('data', (c)=>hash.update(c))
