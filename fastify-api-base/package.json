@@ -1,11 +1,7 @@
 {
 	"license": "MIT",
 	"scripts": {
-		"prebuild": "rm -rf _build",
-		"build": "tsc",
-
-		"tool:gen-session-token": "node ./_build/tools/tool.gen-session-token.js",
-		"tool:create-user": "node ./_build/tools/tool.create-user.js"
+		"serve": "tsx ./boot.api.ts"
 	},
 	"dependencies": {
 		"@types/node": "^20.12.4",
@@ -17,6 +13,7 @@
 		"rootat": "^1.1.0",
 		"shstore": "^1.1.1",
 		"trimid": "^4.1.0",
+		"tsx": "^4.19.0",
 		"typescript": "^5.4.3"
 	}
 }

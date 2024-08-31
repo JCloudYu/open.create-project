@@ -1,14 +1,12 @@
+import "rootat";
 import $ from "shstore";
 import Fastify from "fastify";
 import ClipArgs from "clipargs";
 
-import rootat from "rootat";
-rootat.search_root = `${rootat.project_root}/_build`;
-
 import "@/env.esext.js";
 
 import {BWT} from "@/lib/bwt.js";
-import {ContextCtrl, LogTool} from "@/env.tools.js";
+import {ContextCtrl, LogTool} from "@/env.ctxt-tools.js";
 import {ErrorCode} from "@/data/error-code.js";
 
 import Config from "@/config.default.js";

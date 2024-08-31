@@ -54,9 +54,7 @@ class LogStream {
 
 		const log_time = ToLocalISOString(curr_meta.time_milli);
 		const batch = fnv1a32(Buffer.concat([SESSION_ID, Buffer.from(log_time), Buffer.from((new Uint32Array([SEQ = (SEQ+1)%0xFFFFFFFF])).buffer)]));
-		for(const content of contents) {
-			Log({t:log_time, l:'debg', b:batch, p:{tags:curr_meta.tags, ctnt:content}});
-		}
+		Log({t:log_time, l:'debg', b:batch, p:{tags:curr_meta.tags, ctnt:contents}});
 	}
 	info(...contents:any[]) {
 		const curr_meta = LogStreamMeta.get(this)!;
@@ -64,9 +62,7 @@ class LogStream {
 
 		const log_time = ToLocalISOString(curr_meta.time_milli);
 		const batch = fnv1a32(Buffer.concat([SESSION_ID, Buffer.from(log_time), Buffer.from((new Uint32Array([SEQ = (SEQ+1)%0xFFFFFFFF])).buffer)]));
-		for(const content of contents) {
-			Log({t:log_time, l:'info', b:batch, p:{tags:curr_meta.tags, ctnt:content}});
-		}
+		Log({t:log_time, l:'info', b:batch, p:{tags:curr_meta.tags, ctnt:contents}});
 	}
 	warn(...contents:any[]) {
 		const curr_meta = LogStreamMeta.get(this)!;
@@ -74,9 +70,7 @@ class LogStream {
 
 		const log_time = ToLocalISOString(curr_meta.time_milli);
 		const batch = fnv1a32(Buffer.concat([SESSION_ID, Buffer.from(log_time), Buffer.from((new Uint32Array([SEQ = (SEQ+1)%0xFFFFFFFF])).buffer)]));
-		for(const content of contents) {
-			Log({t:log_time, l:'warn', b:batch, p:{tags:curr_meta.tags, ctnt:content}});
-		}
+		Log({t:log_time, l:'warn', b:batch, p:{tags:curr_meta.tags, ctnt:contents}});
 	}
 	error(...contents:any[]) {
 		const curr_meta = LogStreamMeta.get(this)!;
@@ -84,9 +78,7 @@ class LogStream {
 
 		const log_time = ToLocalISOString(curr_meta.time_milli);
 		const batch = fnv1a32(Buffer.concat([SESSION_ID, Buffer.from(log_time), Buffer.from((new Uint32Array([SEQ = (SEQ+1)%0xFFFFFFFF])).buffer)]));
-		for(const content of contents) {
-			Log({t:log_time, l:'eror', b:batch, p:{tags:curr_meta.tags, ctnt:content}});
-		}
+		Log({t:log_time, l:'eror', b:batch, p:{tags:curr_meta.tags, ctnt:contents}});
 	}
 	fatal(...contents:any[]) {
 		const curr_meta = LogStreamMeta.get(this)!;
@@ -94,9 +86,7 @@ class LogStream {
 
 		const log_time = ToLocalISOString(curr_meta.time_milli);
 		const batch = fnv1a32(Buffer.concat([SESSION_ID, Buffer.from(log_time), Buffer.from((new Uint32Array([SEQ = (SEQ+1)%0xFFFFFFFF])).buffer)]));
-		for(const content of contents) {
-			Log({t:log_time, l:'fatl', b:batch, p:{tags:curr_meta.tags, ctnt:content}});
-		}
+		Log({t:log_time, l:'fatl', b:batch, p:{tags:curr_meta.tags, ctnt:contents}});
 	}
 }
 
@@ -161,27 +151,27 @@ export const LogTool = Object.defineProperties(new LogStream(), {
 
 			switch(l) {
 				case "debg":
-					console.debug(prefix, ctnt);
+					console.debug(prefix, ...ctnt);
 					break;
 
 				case "info":
-					console.info(prefix, ctnt);
+					console.info(prefix, ...ctnt);
 					break;
 
 				case "warn":
-					console.warn(prefix, ctnt);
+					console.warn(prefix, ...ctnt);
 					break;
 
 				case "eror":
-					console.error(prefix, ctnt);
+					console.error(prefix, ...ctnt);
 					break;
 
 				case "fatl":
-					console.error(prefix, ctnt);
+					console.error(prefix, ...ctnt);
 					break;
 				
 				default:
-					console.log(prefix, ctnt);
+					console.log(prefix, ...ctnt);
 					break;
 			}
 		}
