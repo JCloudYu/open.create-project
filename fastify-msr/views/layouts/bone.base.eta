@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+	<head>
+		<title>EXAMPLE</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<meta charset="UTF-8" />
+		<base href="./" />
+		<link rel="stylesheet" type="text/css" href="/res/style.css" />
+	</head>
+	<body><%~$.body%></body>
+</html>

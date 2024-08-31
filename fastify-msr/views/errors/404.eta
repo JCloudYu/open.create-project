@@ -1,0 +1,17 @@
+<% layout('/layouts/bone.base.eta') %>
+<style>
+	error-404 {
+		position:fixed; top:0; left:0; width:100dvw; height:100dvh;
+		background:#000; color:#FFF; font-size:1dvw;
+		display:flex; align-items:center; justify-content:center;
+	}
+
+	error-404 > div > label { font-size:10em; font-weight:bolder; display:block; text-align:center; }
+	error-404 > div > div { font-size:4em; text-align:center; }
+</style>
+<error-404 class="some-default-class" style="background:#333">
+	<div>
+		<label>404</label>
+		<div>You're in middle of nowhere~</div>
+	</div>
+</error-404>

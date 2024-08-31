@@ -1,0 +1,17 @@
+<% layout('/layouts/bone.base.eta') %>
+<style>
+	error-500 {
+		position:fixed; top:0; left:0; width:100dvw; height:100dvh;
+		background:#000; color:#FFF; font-size:1dvw;
+		display:flex; align-items:center; justify-content:center;
+	}
+
+	error-500 > div > label { font-size:10em; font-weight:bolder; display:block; text-align:center; }
+	error-500 > div > div { font-size:4em; text-align:center; }
+</style>
+<error-500 class="some-default-class" style="background:#333">
+	<div>
+		<label>500</label>
+		<div>Oops! Something bad happened!</div>
+	</div>
+</error-500>
