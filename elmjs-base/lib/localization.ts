@@ -28,7 +28,7 @@ export class Localization {
 		return (!template) ? key : template(data);
 	}
 
-	static transElement(element:Element|DocumentFragment, data?:string|{[vname:string]:any}) {
+	static transElement<ElementType extends Element|DocumentFragment=Element>(element:ElementType, data?:string|{[vname:string]:any}):ElementType {
 		// Search for all candidates
 		const root_elements = (element instanceof DocumentFragment) ? Array.from(element.children) : [element];
 		const elements: Element[] = [];
@@ -65,8 +65,11 @@ export class Localization {
 				}
 			}
 		}
+
+		return element;
 	}
 }
+export default Localization;
 
 export function BuildTemplate(strings:TemplateStringsArray, ...var_names:string[]):LocaleTemplate {
 	return function(data?:string|{[vname:string]:any}):string {
@@ -77,15 +80,14 @@ export function BuildTemplate(strings:TemplateStringsArray, ...var_names:string[
 		let result = strs.shift()!;
 		for(const vname of vars) {
 			const string = strs.shift()!;
-			const value = typeof data_map[vname] === "undefined" ? vname : data_map[vname];
-			result += '' + value + string;
+			result += ((data_map[vname]||vname).toString()) + string;
 		}
 
 		return result;
 	};
 }
 
-function GetElementsByXPath(xpath:string, parent:Element) {
+function GetElementsByXPath(xpath:string, parent:Element|DocumentFragment) {
 	let results:Element[] = [];
 	const query = document.evaluate(
 		xpath, parent,
