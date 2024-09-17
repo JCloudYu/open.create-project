@@ -40,3 +40,4 @@ declare type MakeRequired<T, R extends keyof T> = T & Required<Pick<T, R>>;
 declare type MakePartial<T, R extends keyof T> = Omit<T, R> & Partial<Pick<T, R>>;
 declare type MakeExcluded<T, E extends keyof T> = Omit<T, E>;
 declare type JSONType = null|string|number|boolean|{[x:string]:JSONType}|Array<JSONType>;
+declare type AsyncReturnType<T extends (...args: any) => Promise<any>> = T extends (...args: any) => Promise<infer R> ? R : any
