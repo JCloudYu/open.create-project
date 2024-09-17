@@ -2,6 +2,12 @@ declare global {
 	interface ExportedElementMap<ElementType=HTMLElement> {[key:string]:ElementType}
 
 	interface Element {
+		sharedDataStore:Record<string, any>;
+		getSharedData<ReturnType=any>(prop:string|symbol):ReturnType|undefined;
+
+		hiddenData:Record<string, any>;
+		getHiddenData<ReturnType=any>(prop:string|symbol):ReturnType|undefined;
+
 		exportedElements:ExportedElementMap;
 		getExportedElement<ElementType=HTMLElement>(id:string):ElementType|null;
 	}
@@ -28,7 +34,7 @@ declare global {
 	const Ref:WeakMap<Element, ExportedElementMap> = new WeakMap;
 
 	Object.defineProperty(Element.prototype, 'exportedElements', {
-		configurable: true, enumerable:false,
+		configurable:false, enumerable:false,
 		get: function():ExportedElementMap {
 			let ref = Ref.get(this);
 			if ( !ref ) {
@@ -40,7 +46,7 @@ declare global {
 	});
 	
 	Object.defineProperty(Element.prototype, 'getExportedElement', {
-		configurable:true, enumerable:false, writable:true,
+		configurable:false, enumerable:false, writable:false,
 		value: function<ElementType=HTMLElement>(id:string):ElementType|null {
 			const element = this.exportedElements[id];
 			return element ? (element as ElementType) : null;
@@ -48,7 +54,7 @@ declare global {
 	});
 
 	Object.defineProperty(DocumentFragment.prototype, 'exportedElements', {
-		configurable: true, enumerable:false,
+		configurable:false, enumerable:false,
 		get: function():ExportedElementMap {
 			let ref = Ref.get(this);
 			if ( !ref ) {
@@ -60,10 +66,92 @@ declare global {
 	});
 	
 	Object.defineProperty(DocumentFragment.prototype, 'getExportedElement', {
-		configurable:true, enumerable:false, writable:true,
+		configurable:false, enumerable:false, writable:false,
 		value: function<ElementType=HTMLElement>(id:string):ElementType|null {
 			const element = this.exportedElements[id];
 			return element ? (element as ElementType) : null;
+		}
+	});
+}
+
+{
+	const Ref:WeakMap<Element, Record<string|symbol, any>> = new WeakMap;
+	const ProxyHandler:ProxyHandler<any> = {
+		getPrototypeOf(target) {
+			let ref = Ref.get(target)!;
+			if ( !ref ) Ref.set(target, ref={});
+
+			return Object.getPrototypeOf(ref);
+		},
+		deleteProperty(target, prop) {
+			let ref = Ref.get(target)!;
+			if ( !ref ) Ref.set(target, ref={});
+
+			delete ref[prop];
+			return true;
+		},
+		set(target, prop, value) {
+			let ref = Ref.get(target)!;
+			if ( !ref ) Ref.set(target, ref={});
+
+			ref[prop] = value;
+			return true;
+		},
+		get(target, prop) {
+			return __get_var(target, prop);
+		}
+	};
+
+	Object.defineProperty(Element.prototype, 'sharedDataStore', {
+		configurable: false, enumerable:false,
+		get: function():ExportedElementMap {
+			return new Proxy(this, ProxyHandler);
+		}
+	});
+	
+	Object.defineProperty(Element.prototype, 'getSharedData', {
+		configurable:false, enumerable:false, writable:false,
+		value: function<ReturnType=any>(field_name:string|symbol):ReturnType|undefined {
+			return __get_var<ReturnType>(this, field_name);
+		}
+	});
+
+
+	function __get_var<ReturnType=any>(target:Element, prop:string|symbol):ReturnType|undefined {
+		let ref_target:Element|null = target;
+		while(ref_target) {
+			let ref = Ref.get(ref_target)!;
+			if ( !ref ) Ref.set(ref_target, ref={});			
+			if (ref[prop] !== undefined) {
+				return ref[prop];
+			}
+
+			ref_target = ref_target.parentNode as Element|null;
+		}
+
+		return undefined;
+	}
+}
+
+{
+	const Ref:WeakMap<Element, Record<string|symbol, any>> = new WeakMap;
+
+	Object.defineProperty(Element.prototype, 'hiddenData', {
+		configurable: false, enumerable:false,
+		get: function():ExportedElementMap {
+			let ref = Ref.get(this)!;
+			if ( !ref ) Ref.set(this, ref={});
+			return ref;
+		}
+	});
+	
+	Object.defineProperty(Element.prototype, 'getHiddenData', {
+		configurable:false, enumerable:false, writable:true,
+		value: function<ReturnType=any>(field_name:string|symbol):ReturnType|undefined {
+			let ref = Ref.get(this)!;
+			if ( !ref ) Ref.set(this, ref={});
+
+			return ref[field_name];
 		}
 	});
 }
