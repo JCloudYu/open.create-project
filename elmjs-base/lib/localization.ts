@@ -33,7 +33,7 @@ export class Localization {
 		const root_elements = (element instanceof DocumentFragment) ? Array.from(element.children) : [element];
 		const elements: Element[] = [];
 		for(const elm of root_elements) {
-			const results = GetElementsByXPath('//*[@*[starts-with(name(), "elm-trans")]]', elm);
+			const results = GetElementsByXPath('.//*[@*[starts-with(name(), "elm-trans")]]', elm);
 			elements.push(...results);
 		}
 		if ( !(element instanceof DocumentFragment) ) { elements.unshift(element) };
