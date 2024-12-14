@@ -89,7 +89,8 @@ export function BuildTemplate(strings:TemplateStringsArray, ...var_names:string[
 
 function GetElementsByXPath(xpath:string, parent:Element|DocumentFragment) {
 	let results:Element[] = [];
-	const query = document.evaluate(
+
+	const query = (new XPathEvaluator()).evaluate(
 		xpath, parent,
 		null, 
 		XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, 

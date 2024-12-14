@@ -17,7 +17,7 @@ const argv = Clipargs
 .bool('obfuscate', '-ob', '--obfuscate')
 .bool('fullpack', '-p', '--pack')
 .bool('help', '-h', '--help')
-.bool('env', '-E', '--env')
+.string('env', '-E', '--env')
 .parse(process.argv.slice(2));
 
 
