@@ -10,6 +10,7 @@
 	},
 	"dependencies": {
 		"@types/node": "^20.12.2",
-		"clipargs": "^3.0.0"
+		"clipargs": "^3.0.0",
+		"tar": "^7.0.1"
 	}
 }
