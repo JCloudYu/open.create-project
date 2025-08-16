@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 const path = require('node:path');
 const fs = require('node:fs');
+const os = require('node:os');
+const https = require('node:https');
+const http = require('node:http');
 const child = require('node:child_process');
 const clipargs = require("clipargs");
 const tar = require('tar');
@@ -48,45 +51,75 @@ const project_list = require('./project-list.js');
 	// Download corresponding project from github
 	await downloadAndExtractProject(template_info.latest, dest_dir);
 
-
-
-	console.log("Initializing project...");
-	child.spawnSync("npm", ["install"], {cwd: dest_dir, stdio: [0, 1, 2]});
-
+	
 
 
 
 	// 下載並解壓縮專案
 	async function downloadAndExtractProject(downloadUrl, destDir) {
-		const response = await fetch(downloadUrl);
-		if (!response.ok) {
-			throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-		}
+		// 暫存檔案路徑 - 使用系統暫存目錄，確保跨平台相容性
+		const tempPath = path.join(os.tmpdir(), `create-project-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.tar.gz`);
 
-		// 暫存檔案路徑
-		const tempPath = path.join(__dirname, `temp-${Date.now()}.tar.gz`);
-
-		// 使用 streaming 方式寫入暫存檔案
+		// 建立暫存檔 stream
 		const fileStream = fs.createWriteStream(tempPath);
 		
-		// 將 response body 直接 pipe 到檔案
+		// 將 downloadUrl 下載到暫存檔
+		console.log(`Downloading ${downloadUrl}...`);
+		const stream = await getRequest(downloadUrl);
 		await new Promise((resolve, reject) => {
-			response.body
-				.pipe(fileStream)
-				.on('error', reject)
-				.on('finish', resolve);
+			stream.pipe(fileStream);
+			fileStream.on('finish', ()=>{
+				stream.destroy();
+				resolve();
+			});
+			fileStream.on('error', reject);
 		});
 
 		// 解壓縮
+		console.log(`Extracting ${destDir}...`);
 		await tar.extract({
 			gzip: true,
 			file: tempPath,
 			cwd: destDir,
-			strip: 1 // github 的下載路徑永遠都會多一層
+			strip: 1, // github 的下載路徑永遠都會多一層
+			filter: (path, entry) => {
+				console.log(`    ${path}`);
+				return true;
+			}
 		});
 
 		// 清理暫存檔案
 		fs.unlinkSync(tempPath);
+	}
+
+
+	async function getRequest(url) {
+		const req_module = url.startsWith('https:') ? https : http;
+
+		return new Promise((resolve, reject) => {
+			const request = req_module.get(url, (response) => {
+				// 處理重定向
+				if (response.statusCode === 301 || response.statusCode === 302 || response.statusCode === 307 || response.statusCode === 308) {
+					const location = response.headers.location;
+					if (location) {
+						response.destroy();
+						
+						// 遞迴處理重定向
+						getRequest(location).then(resolve).catch(reject);
+						return;
+					}
+				}
+				
+				if (response.statusCode !== 200) {
+					reject(new Error(`HTTP ${response.statusCode}: ${response.statusMessage}`));
+					return;
+				}
+				
+				resolve(response);
+			});
+			
+			request.on('error', reject);
+		});
 	}
 })().catch((error)=>{
 	console.error('Unexpected error:', error.message);
