@@ -10,16 +10,25 @@ const tar = require('tar');
 const project_list = require('./project-list.js');
 
 (async()=>{
-	/** @type {{_:string[]; help?:boolean;}} **/
+	/** @type {{_:string[]; help?:boolean; list?:boolean;}} **/
 	const argv = clipargs
 		.bool('help', '-h', '--help')
+		.bool('list', '-l', '--list')
 		.parse(process.argv.slice(2));
 
 
 
 	if (argv.help) {
 		console.log("Usage: npm init create-project {template_name} {project_path}");
+		console.log("       create-project --list");
 		console.log(`Available templates:\n${Object.keys(project_list).map(i=>`    ${i}`).join('\n')}`);
+		process.exit(0);
+	}
+
+	if (argv.list) {
+		for (const key of Object.keys(project_list)) {
+			console.log(key);
+		}
 		process.exit(0);
 	}
 

@@ -1,6 +1,9 @@
 {
 	"private": false,
 	"name": "@jcloudyu/create-tmpl",
+	"publishConfig": {
+		"access": "public"
+	},
 	"version": "0.7.0",
 	"repository": "https://github.com/JCloudYu/open.create-project.git",
 	"author": "JCloudYu",
