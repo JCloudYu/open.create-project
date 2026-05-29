@@ -4,7 +4,7 @@
 	"publishConfig": {
 		"access": "public"
 	},
-	"version": "0.7.0",
+	"version": "1.0.0",
 	"repository": "https://github.com/JCloudYu/open.create-project.git",
 	"author": "JCloudYu",
 	"license": "MIT",
